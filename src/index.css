@@ -1,0 +1,153 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/manrope-latin.woff2') format('woff2');
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --brand-orange: #f47721;
+    --brand-cream: #fff8ef;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-brand-cream font-sans text-brand-charcoal;
+    min-width: 280px;
+  }
+
+  ::selection {
+    background: rgba(244, 119, 33, 0.24);
+  }
+
+  :focus-visible {
+    outline: 3px solid rgba(244, 119, 33, 0.65);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-8xl px-5 sm:px-8 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-brand-dark;
+  }
+
+  .surface-card {
+    @apply rounded-3xl border border-brand-line bg-white shadow-card;
+  }
+
+  .field-label {
+    @apply mb-2 block text-sm font-semibold text-brand-charcoal;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-xs leading-5 text-brand-muted;
+  }
+
+  .field-error {
+    @apply mt-1.5 flex items-start gap-1.5 text-xs font-medium text-brand-error;
+  }
+
+  .input-base {
+    @apply w-full rounded-2xl border border-brand-line bg-white px-4 py-3.5 text-sm text-brand-charcoal shadow-sm outline-none transition placeholder:text-brand-muted/70 focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15;
+  }
+
+  .select-base {
+    @apply input-base appearance-none pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24' stroke='%23716B63' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+  }
+
+  .legal-prose h2 {
+    @apply mt-10 text-2xl font-bold tracking-tight text-brand-charcoal;
+  }
+
+  .legal-prose h3 {
+    @apply mt-7 text-lg font-bold text-brand-charcoal;
+  }
+
+  .legal-prose p {
+    @apply mt-3 text-[0.95rem] leading-7 text-brand-muted;
+  }
+
+  .legal-prose ul {
+    @apply mt-3 list-disc space-y-2 pl-5 text-[0.95rem] leading-7 text-brand-muted;
+  }
+
+  .legal-prose a {
+    @apply font-semibold text-brand-dark underline decoration-brand-orange/40 underline-offset-4;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .mask-fade-r {
+    mask-image: linear-gradient(to right, black 82%, transparent 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
