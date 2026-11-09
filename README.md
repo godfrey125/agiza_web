@@ -155,6 +155,24 @@ approvals.
    `Content-Disposition: attachment; filename="agiza.apk"` so Android browsers
    download the supplied APK correctly.
 
+### Vercel
+
+`vercel.json` configures the Vite build, SPA fallback, and the APK response
+headers. Import `godfrey125/agiza_web` in Vercel, or deploy with the Vercel CLI.
+Set the production `VITE_*` values in the Vercel project before deploying,
+especially:
+
+- `VITE_API_BASE_URL` — the public HTTPS URL of the Django API, not
+  `localhost`.
+- `VITE_SITE_URL` — the final Vercel or custom domain.
+- `VITE_PARTNER_API_BASE_URL` and `VITE_CONTACT_ENDPOINT` — only when those
+  services are live.
+
+Vite bakes `VITE_*` values into the built assets, so changing an environment
+variable in Vercel requires a redeploy. The APK is 23 MB, which is within
+Vercel's 100 MB static-file limit for Hobby projects. If you later move the APK
+to external storage, set `VITE_APP_APK_URL` to its public HTTPS URL.
+
 ## Verification checklist
 
 - `npm run build` succeeds with no TypeScript errors.
