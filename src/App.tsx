@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { SiteLayout, ScrollToTop } from './components/layout/SiteLayout'
+import { AdminLayout } from './components/admin/AdminLayout'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { Home } from './pages/Home'
 
@@ -25,6 +26,9 @@ const RiderRegister = lazy(() =>
 const ApplicationStatus = lazy(() =>
   import('./pages/ApplicationStatus').then((module) => ({ default: module.ApplicationStatus })),
 )
+const AdminDashboard = lazy(() =>
+  import('./pages/AdminDashboard').then((module) => ({ default: module.AdminDashboard })),
+)
 const AdminApplications = lazy(() =>
   import('./pages/AdminApplications').then((module) => ({ default: module.AdminApplications })),
 )
@@ -40,6 +44,17 @@ export default function App() {
       <MotionConfig reducedMotion="user">
         <ScrollToTop />
         <Routes>
+          <Route
+            path="admin"
+            element={
+              <ProtectedRoute staffOnly>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="applications" element={<AdminApplications />} />
+          </Route>
           <Route element={<SiteLayout />}>
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
@@ -70,14 +85,6 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <ApplicationStatus />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/applications"
-              element={
-                <ProtectedRoute staffOnly>
-                  <AdminApplications />
                 </ProtectedRoute>
               }
             />

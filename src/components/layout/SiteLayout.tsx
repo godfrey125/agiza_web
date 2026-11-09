@@ -4,6 +4,7 @@ import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { InstallAppBand } from './InstallAppBand'
 import { AppInstallPrompt } from '../home/AppInstallPrompt'
+import { AnalyticsTracker } from '../../lib/analytics'
 import { useCopy } from '../../i18n'
 
 export function ScrollToTop() {
@@ -41,6 +42,7 @@ export function SiteLayout() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-brand-cream">
+      <AnalyticsTracker />
       <Navbar />
       <main id="main-content" className="flex-1">
         <Suspense fallback={<PageFallback />}>

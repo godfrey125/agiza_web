@@ -87,8 +87,9 @@ export const tokenStore = {
     localStorage.setItem(REFRESH_KEY, tokens.refresh)
     localStorage.setItem(USER_KEY, JSON.stringify(user))
   },
-  saveAccess(access: string) {
+  saveAccess(access: string, refresh?: string) {
     localStorage.setItem(ACCESS_KEY, access)
+    if (refresh) localStorage.setItem(REFRESH_KEY, refresh)
   },
   saveUser(user: AuthUser) {
     localStorage.setItem(USER_KEY, JSON.stringify(user))
@@ -117,12 +118,12 @@ async function refreshAccessToken(): Promise<string | null> {
           tokenStore.clear()
           return null
         }
-        const data = (await response.json()) as { access?: string }
+        const data = (await response.json()) as { access?: string; refresh?: string }
         if (!data.access) {
           tokenStore.clear()
           return null
         }
-        tokenStore.saveAccess(data.access)
+        tokenStore.saveAccess(data.access, data.refresh)
         return data.access
       } catch {
         return null
@@ -395,4 +396,98 @@ export function submitContact(payload: {
     baseUrl: '',
     body: payload,
   })
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          Website analytics dashboard                       */
+/* -------------------------------------------------------------------------- */
+
+export interface AnalyticsOverview {
+  page_views: number
+  page_views_change: number | null
+  unique_visitors: number
+  unique_visitors_change: number | null
+  sessions: number
+  sessions_change: number | null
+  logged_in_visitors: number
+  logged_in_visitors_change: number | null
+  new_visitors: number
+  returning_visitors: number
+  active_now: number
+  bot_page_views: number
+  staff_page_views: number
+  all_time_page_views: number
+  all_time_unique_visitors: number
+}
+
+export interface AnalyticsDailyPoint {
+  date: string
+  views: number
+  visitors: number
+}
+
+export interface AnalyticsPageRow {
+  path: string
+  views: number
+  visitors: number
+}
+
+export interface AnalyticsSourceRow {
+  source: string
+  views: number
+  visitors: number
+}
+
+export interface AnalyticsDeviceRow {
+  device: string
+  views: number
+  visitors: number
+}
+
+export interface AnalyticsBrowserRow {
+  browser: string
+  views: number
+  visitors: number
+}
+
+export interface AnalyticsRecentVisit {
+  path: string
+  visitor: string
+  time: string
+  device: string
+  browser: string
+  source: string
+}
+
+export interface AnalyticsPlatform {
+  total_users: number
+  new_users: number
+  customers: number
+  vendors: number
+  riders: number
+  admins: number
+  total_orders: number
+  orders_in_range: number
+  pending_orders: number
+  order_value_in_range: string
+  vendor_profiles: number
+  rider_profiles: number
+}
+
+export interface AdminDashboardData {
+  range_days: number
+  generated_at: string
+  range: { start: string; end: string }
+  overview: AnalyticsOverview
+  daily: AnalyticsDailyPoint[]
+  top_pages: AnalyticsPageRow[]
+  top_sources: AnalyticsSourceRow[]
+  devices: AnalyticsDeviceRow[]
+  browsers: AnalyticsBrowserRow[]
+  recent_visits: AnalyticsRecentVisit[]
+  platform: AnalyticsPlatform
+}
+
+export function fetchAdminDashboard(days: number) {
+  return apiRequest<AdminDashboardData>(`/analytics/dashboard/?days=${days}`)
 }

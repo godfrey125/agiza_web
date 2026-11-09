@@ -81,7 +81,7 @@ export function Login() {
       if (from) {
         navigate(from, { replace: true })
       } else if (signedIn.role === 'admin') {
-        navigate('/admin/applications', { replace: true })
+        navigate('/admin', { replace: true })
       } else {
         navigate('/application-status', { replace: true })
       }
@@ -122,7 +122,7 @@ export function Login() {
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </ButtonLink>
               {user.role === 'admin' ? (
-                <ButtonLink to="/admin/applications" fullWidth size="lg" variant="secondary">
+                <ButtonLink to="/admin" fullWidth size="lg" variant="secondary">
                   {c.nav.admin}
                 </ButtonLink>
               ) : (

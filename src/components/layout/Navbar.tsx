@@ -284,7 +284,7 @@ export function Navbar() {
                     </Link>
                     {isStaff ? (
                       <Link
-                        to="/admin/applications"
+                        to="/admin"
                         role="menuitem"
                         className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-brand-charcoal transition hover:bg-brand-cream"
                       >

@@ -5,9 +5,11 @@ marketplace. The site covers food discovery, dine-in ordering, delivery and
 custom food requests, with English/Kiswahili content and mobile-first vendor and
 rider application flows.
 
-This repository is the **frontend only**. It does not modify the existing
-Django/Flutter project and it never invents approvals, reference numbers,
-contact details or verification results.
+This repository is the **frontend**. It never invents approvals, reference
+numbers, contact details, visitor statistics or verification results. Visitor
+analytics and the staff dashboard read from the separate Django backend; if that
+backend is not configured, the dashboard shows an explicit unavailable state
+instead of sample numbers.
 
 ## Stack
 
@@ -51,6 +53,7 @@ npm run lint       # oxlint
 | `/register/vendor` | Protected five-step vendor application |
 | `/register/rider` | Protected five-step rider application |
 | `/application-status` | Protected, server-confirmed application tracking |
+| `/admin` | Protected staff overview with real visitor analytics |
 | `/admin/applications` | Protected staff review queue |
 | `/contact`, `/faq` | Support information and contact form |
 | `/privacy`, `/terms` | Legal drafts marked for legal review |
@@ -105,6 +108,52 @@ tokens are stored in local storage by the existing client and sent as
 Development OTPs are displayed only when the Django endpoint returns `dev_otp`.
 The development warning itself is hidden in production builds.
 
+Production OTP delivery requires `OTP_SMS_WEBHOOK_URL` on the Django backend. The
+backend POSTs `{"phone", "otp", "message"}` to that trusted SMS relay. If it is not
+configured outside `DEBUG`, the login endpoint returns `503` instead of claiming
+an SMS was sent. Use a shared cache such as Redis for OTPs when running more than
+one backend instance.
+
+## Visitor analytics and staff dashboard
+
+The protected `/admin` page shows real page views, unique visitors, sessions,
+top pages, referral sources, devices, browsers, recent visits and marketplace
+counts from the Django backend. It has no hardcoded or sample numbers. If the API
+is unreachable or the signed-in user is not staff, the page says so and shows no
+fake data.
+
+The public tracker in `src/lib/analytics.ts` calls:
+
+- `POST /analytics/track/` — anonymous page view, with optional Bearer token when
+  the visitor is signed in.
+
+The dashboard calls:
+
+- `GET /analytics/dashboard/?days=7` — staff-only aggregate data.
+
+Privacy behaviour:
+
+- No raw IP address is stored. A random `visitor_id` lives in local storage and a
+  random `session_id` lives in session storage; each page view has its own
+  `visit_id`.
+- Do Not Track is respected.
+- Admin and direct-download routes are not tracked.
+- Bot and staff page views are recorded separately and excluded from public
+  visitor totals.
+
+To create a staff account locally, register normally with a phone number, then
+promote that user in the Django shell:
+
+```bash
+cd /path/to/agiza-master/backend
+.venv/bin/python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); u=U.objects.get(phone='+2557XXXXXXXX'); u.role=U.Role.ADMIN; u.is_staff=True; u.save()"
+```
+
+Sign in through the website with that phone number and OTP; the `/admin` link
+appears for staff users. Production needs a shared OTP cache such as Redis and a
+strong `SECRET_KEY`, and the frontend needs `VITE_API_BASE_URL` pointing to the
+deployed HTTPS API.
+
 ## Partner application contract
 
 The intended backend contract is documented in
@@ -137,6 +186,9 @@ approvals.
 - The existing Django project has no partner application, document storage,
   verification or admin review endpoints. Those endpoints must be implemented
   and deployed before launch.
+- Visitor analytics and the `/admin` dashboard require the Django backend to be
+  deployed and reachable at `VITE_API_BASE_URL`. No production backend is live
+  yet, so a production build will show the dashboard as unavailable until it is.
 - No verified Agiza phone number, email address, physical address or social
   account was supplied. `src/lib/config.ts` deliberately leaves them blank.
 - Privacy and Terms are drafts and are marked as requiring legal review.
@@ -150,8 +202,10 @@ approvals.
 3. Serve `dist/` over HTTPS.
 4. Configure SPA fallback so unknown paths return `index.html`.
 5. Add the deployed origin to the Django and partner API CORS allow-list.
-6. Verify the partner API over HTTPS before enabling submission.
-7. Serve `/downloads/agiza.apk` as `application/vnd.android.package-archive` with
+6. Run migrations and create at least one staff account in the Django backend for
+   `/admin`.
+7. Verify the partner API over HTTPS before enabling submission.
+8. Serve `/downloads/agiza.apk` as `application/vnd.android.package-archive` with
    `Content-Disposition: attachment; filename="agiza.apk"` so Android browsers
    download the supplied APK correctly.
 
@@ -178,6 +232,8 @@ to external storage, set `VITE_APP_APK_URL` to its public HTTPS URL.
 - `npm run build` succeeds with no TypeScript errors.
 - EN/SW switching updates navigation, pages, forms, validation and statuses.
 - Phone OTP login works against the configured Django API.
+- `/admin` shows live backend counts for staff users and an explicit unavailable
+  state when the analytics API is not configured.
 - Registration routes redirect unauthenticated visitors to `/login`.
 - Submission is disabled with a clear message when the partner API is absent.
 - No contact details, approvals, reference numbers, testimonials, partner logos
