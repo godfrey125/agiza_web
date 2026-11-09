@@ -6,6 +6,7 @@ import {
   ArrowRight,
   ChevronDown,
   ClipboardCheck,
+  Download,
   LayoutDashboard,
   LogOut,
   Smartphone,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useI18n } from '../../i18n'
 import { useAuth } from '../../lib/auth'
+import { siteConfig } from '../../lib/config'
 import { cn, initials } from '../../lib/utils'
 import { ButtonLink } from '../ui/Button'
 
@@ -60,6 +62,44 @@ function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
         {lang}
       </motion.span>
     </motion.button>
+  )
+}
+
+function AppMenuCard({ onNavigate }: { onNavigate: () => void }) {
+  const { c } = useI18n()
+  const className =
+    'group mt-6 flex max-w-sm items-center gap-3 rounded-[1.35rem] border border-white/70 bg-white/55 p-3.5 shadow-[0_20px_50px_-30px_rgba(23,22,20,0.45)] backdrop-blur-xl transition hover:bg-white/80'
+
+  const content = (
+    <>
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-charcoal text-brand-orange">
+        <Smartphone className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-bold text-brand-charcoal">{c.nav.getTheApp}</span>
+        <span className="mt-0.5 block text-[0.65rem] text-brand-muted">
+          {c.appDownload.installTag}
+        </span>
+      </span>
+      <ArrowRight
+        className="h-4 w-4 shrink-0 text-brand-muted transition group-hover:translate-x-0.5 group-hover:text-brand-dark"
+        aria-hidden="true"
+      />
+    </>
+  )
+
+  if (siteConfig.app.apkUrl) {
+    return (
+      <a href={siteConfig.app.apkUrl} download onClick={onNavigate} className={className}>
+        {content}
+      </a>
+    )
+  }
+
+  return (
+    <Link to="/#get-the-app" onClick={onNavigate} className={className}>
+      {content}
+    </Link>
   )
 }
 
@@ -190,6 +230,16 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {siteConfig.app.apkUrl ? (
+            <a
+              href={siteConfig.app.apkUrl}
+              download
+              className="hidden h-10 items-center gap-1.5 rounded-full border border-brand-line bg-white px-3 text-xs font-bold text-brand-charcoal shadow-sm transition hover:border-brand-charcoal/25 hover:bg-brand-cream md:inline-flex"
+            >
+              <Download className="h-3.5 w-3.5 text-brand-dark" aria-hidden="true" />
+              {c.nav.installApp}
+            </a>
+          ) : null}
           {isAuthenticated && user ? (
             <div className="relative" ref={userRef}>
               <button
@@ -385,23 +435,7 @@ export function Navbar() {
                   </h2>
                   <p className="mt-4 max-w-md text-sm leading-7 text-brand-muted">{c.footer.description}</p>
 
-                  <Link
-                    to="/#get-the-app"
-                    onClick={() => setMenuOpen(false)}
-                    className="group mt-6 flex max-w-sm items-center gap-3 rounded-[1.35rem] border border-white/70 bg-white/55 p-3.5 shadow-[0_20px_50px_-30px_rgba(23,22,20,0.45)] backdrop-blur-xl transition hover:bg-white/80"
-                  >
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-charcoal text-brand-orange">
-                      <Smartphone className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-bold text-brand-charcoal">{c.nav.getTheApp}</span>
-                      <span className="mt-0.5 block text-[0.65rem] text-brand-muted">Android · iOS</span>
-                    </span>
-                    <ArrowRight
-                      className="h-4 w-4 shrink-0 text-brand-muted transition group-hover:translate-x-0.5 group-hover:text-brand-dark"
-                      aria-hidden="true"
-                    />
-                  </Link>
+                  <AppMenuCard onNavigate={() => setMenuOpen(false)} />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
@@ -462,7 +496,7 @@ export function Navbar() {
                   {c.footer.tagline}
                 </span>
                 <span className="text-[0.62rem] font-semibold uppercase tracking-[0.14em]">
-                  {c.appDownload.android} · {c.appDownload.ios}
+                  {c.appDownload.androidApk}
                 </span>
               </div>
             </motion.div>

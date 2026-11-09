@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import {
   ArrowUpRight,
   Clock3,
+  Download,
   ExternalLink,
   MapPin,
   Search,
@@ -27,6 +28,7 @@ interface PlatformCard {
   name: string
   meta: string
   url: string
+  directDownload?: boolean
   badge?: string
   badgeAlt?: string
   badgeWidth?: number
@@ -230,19 +232,44 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
   const c = useCopy()
   const app = siteConfig.app
 
+  const androidPlatform: PlatformCard = app.links.playStore
+    ? {
+        key: 'playStore',
+        platform: 'android',
+        name: c.appDownload.platformPlayStore,
+        meta: c.appDownload.platformPlayStoreMeta,
+        url: app.links.playStore,
+        badge: '/badges/google-play.png',
+        badgeAlt: 'Get it on Google Play',
+        badgeWidth: 646,
+        badgeHeight: 250,
+        logo: '/badges/google-play-icon.png',
+      }
+    : app.apkUrl
+      ? {
+          key: 'androidApk',
+          platform: 'android',
+          name: c.appDownload.platformAndroidApk,
+          meta: c.appDownload.platformAndroidApkMeta,
+          url: app.apkUrl,
+          directDownload: true,
+          logo: '/agiza.png',
+        }
+      : {
+          key: 'playStore',
+          platform: 'android',
+          name: c.appDownload.platformPlayStore,
+          meta: c.appDownload.platformPlayStoreMeta,
+          url: '',
+          badge: '/badges/google-play.png',
+          badgeAlt: 'Get it on Google Play',
+          badgeWidth: 646,
+          badgeHeight: 250,
+          logo: '/badges/google-play-icon.png',
+        }
+
   const platforms: PlatformCard[] = [
-    {
-      key: 'playStore',
-      platform: 'android',
-      name: c.appDownload.platformPlayStore,
-      meta: c.appDownload.platformPlayStoreMeta,
-      url: app.links.playStore,
-      badge: '/badges/google-play.png',
-      badgeAlt: 'Get it on Google Play',
-      badgeWidth: 646,
-      badgeHeight: 250,
-      logo: '/badges/google-play-icon.png',
-    },
+    androidPlatform,
     {
       key: 'appStore',
       platform: 'ios',
@@ -258,7 +285,14 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
   ]
 
   const details = [
-    { label: c.appDownload.version, value: app.version || c.appDownload.notPublished },
+    ...(app.apkUrl
+      ? [{ label: c.appDownload.package, value: c.appDownload.androidApk }]
+      : []),
+    ...(app.version
+      ? [{ label: c.appDownload.version, value: app.version }]
+      : !app.apkUrl
+        ? [{ label: c.appDownload.version, value: c.appDownload.notPublished }]
+        : []),
     ...(app.size ? [{ label: c.appDownload.size, value: app.size }] : []),
     ...(app.releaseDate ? [{ label: c.appDownload.released, value: app.releaseDate }] : []),
     ...(app.minAndroid ? [{ label: c.appDownload.minAndroid, value: app.minAndroid }] : []),
@@ -266,7 +300,7 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
   ]
 
   const hasReleaseDetails = Boolean(
-    app.version || app.size || app.releaseDate || app.minAndroid || app.minIos,
+    app.apkUrl || app.version || app.size || app.releaseDate || app.minAndroid || app.minIos,
   )
 
   return (
@@ -309,6 +343,9 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
             <div className="grid min-w-0 grid-cols-1 gap-3" aria-labelledby="app-download-title">
               {platforms.map((platform) => {
                 const available = Boolean(platform.url)
+                const linkProps = platform.directDownload
+                  ? { download: true }
+                  : { target: '_blank', rel: 'noreferrer noopener' }
 
                 const content = (
                   <>
@@ -326,10 +363,17 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
                           />
                         </span>
                         {available ? (
-                          <ExternalLink
-                            className="h-4 w-4 shrink-0 text-white/35 transition group-hover:text-white"
-                            aria-hidden="true"
-                          />
+                          platform.directDownload ? (
+                            <Download
+                              className="h-4 w-4 shrink-0 text-white/35 transition group-hover:text-white"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <ExternalLink
+                              className="h-4 w-4 shrink-0 text-white/35 transition group-hover:text-white"
+                              aria-hidden="true"
+                            />
+                          )
                         ) : null}
                       </div>
 
@@ -347,6 +391,11 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
                           className="mt-4 h-9 w-auto max-w-full object-contain"
                           loading="lazy"
                         />
+                      ) : available ? (
+                        <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-orange px-3.5 py-2 text-[0.68rem] font-bold text-white">
+                          <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                          {c.appDownload.downloadApk}
+                        </span>
                       ) : (
                         <Badge tone="inverse" className="mt-4">
                           {c.appDownload.comingSoon}
@@ -355,7 +404,7 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
 
                       {available ? (
                         <p className="mt-3 text-[0.68rem] leading-5 text-white/40">
-                          {c.appDownload.availableOn}
+                          {platform.directDownload ? c.appDownload.apkNote : c.appDownload.availableOn}
                         </p>
                       ) : null}
                     </div>
@@ -367,9 +416,12 @@ export function AppAvailabilitySection({ className }: { className?: string }) {
                     <a
                       key={platform.key}
                       href={platform.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      aria-label={`${c.appDownload.availableOn} ${platform.name} (${platform.meta})`}
+                      {...linkProps}
+                      aria-label={
+                        platform.directDownload
+                          ? `${c.appDownload.downloadApk} ${platform.name}`
+                          : `${c.appDownload.availableOn} ${platform.name} (${platform.meta})`
+                      }
                       className="group flex min-w-0 flex-wrap items-center gap-4 rounded-[1.75rem] border border-white/10 bg-white/[0.055] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-brand-charcoal sm:gap-5 sm:p-5"
                     >
                       {content}

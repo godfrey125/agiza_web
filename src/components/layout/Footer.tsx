@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, LockKeyhole } from 'lucide-react'
+import { ArrowUpRight, Download, LockKeyhole } from 'lucide-react'
 import { useI18n } from '../../i18n'
 import { siteConfig } from '../../lib/config'
 import { Logo } from '../ui/Logo'
@@ -41,6 +41,30 @@ export function Footer() {
                 ))}
               </div>
             </div>
+
+            {siteConfig.app.apkUrl ? (
+              <a
+                href={siteConfig.app.apkUrl}
+                download
+                className="group mt-6 flex max-w-sm items-center gap-3 rounded-2xl border border-brand-line bg-white p-3.5 transition hover:border-brand-charcoal/25 hover:bg-white/80"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-charcoal text-brand-orange">
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-brand-charcoal">
+                    {c.footer.installApp}
+                  </span>
+                  <span className="mt-0.5 block text-[0.68rem] text-brand-muted">
+                    {c.footer.installBody}
+                  </span>
+                </span>
+                <ArrowUpRight
+                  className="h-4 w-4 shrink-0 text-brand-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-dark"
+                  aria-hidden="true"
+                />
+              </a>
+            ) : null}
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">

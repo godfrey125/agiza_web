@@ -66,10 +66,13 @@ See `.env.example` and `docs/PARTNER_API.md`.
 | `VITE_CONTACT_ENDPOINT` | Contact form is disabled |
 | `VITE_SITE_URL` | No canonical domain is assumed |
 
-App availability is also environment-driven. Leave these blank until a verified release exists:
+App availability is also environment-driven. The supplied Android APK is served
+from `public/downloads/agiza.apk` by default. Store links and release details stay
+blank until they are genuine and verified:
 
 | Variable | Purpose |
 | --- | --- |
+| `VITE_APP_APK_URL` | Direct Android APK download; defaults to `/downloads/agiza.apk` |
 | `VITE_APP_VERSION` | Current published app version |
 | `VITE_APP_SIZE` | Download size, for example `42 MB` |
 | `VITE_APP_RELEASE_DATE` | Latest release date |
@@ -78,7 +81,10 @@ App availability is also environment-driven. Leave these blank until a verified 
 | `VITE_APP_PLAY_STORE_URL` | Google Play listing |
 | `VITE_APP_APP_STORE_URL` | Apple App Store listing |
 
-A store badge is enabled only when its URL is set. Until then the homepage shows a clearly marked “Coming soon” platform card. See [`docs/APP_BADGES.md`](docs/APP_BADGES.md) for badge sources and usage rules.
+The Android APK can be downloaded directly from the site. A store badge is enabled
+only when its URL is set. Until then the homepage shows a clearly marked “Coming
+soon” platform card for that store. See [`docs/APP_BADGES.md`](docs/APP_BADGES.md)
+for badge sources and usage rules.
 
 All `VITE_*` values are public in the browser bundle. Do not put secrets there.
 
@@ -145,6 +151,9 @@ approvals.
 4. Configure SPA fallback so unknown paths return `index.html`.
 5. Add the deployed origin to the Django and partner API CORS allow-list.
 6. Verify the partner API over HTTPS before enabling submission.
+7. Serve `/downloads/agiza.apk` as `application/vnd.android.package-archive` with
+   `Content-Disposition: attachment; filename="agiza.apk"` so Android browsers
+   download the supplied APK correctly.
 
 ## Verification checklist
 

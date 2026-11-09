@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowRight, Utensils, X } from 'lucide-react'
+import { ArrowRight, Download, Utensils, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useCopy } from '../../i18n'
+import { siteConfig } from '../../lib/config'
 
 const DISMISS_KEY = 'agiza.web.appPromptDismissed'
 
@@ -47,7 +48,6 @@ export function AppInstallPrompt() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (pathname !== '/') return
     if (sessionStorage.getItem(DISMISS_KEY) === '1') return
 
     const timer = window.setTimeout(() => setVisible(true), 2600)
@@ -58,8 +58,6 @@ export function AppInstallPrompt() {
     setVisible(false)
     sessionStorage.setItem(DISMISS_KEY, '1')
   }
-
-  if (pathname !== '/') return null
 
   return (
     <AnimatePresence>
@@ -118,16 +116,28 @@ export function AppInstallPrompt() {
 
             <div className="relative mt-3 flex items-center justify-between gap-3 border-t border-brand-line pt-3">
               <span className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-brand-muted">
-                Android · iOS
+                {c.appDownload.androidApk}
               </span>
-              <Link
-                to="/#get-the-app"
-                onClick={dismiss}
-                className="inline-flex items-center gap-1.5 rounded-full bg-brand-charcoal px-3.5 py-2 text-[0.66rem] font-bold text-white transition hover:bg-black"
-              >
-                {c.appDownload.installCta}
-                <ArrowRight className="h-3 w-3" aria-hidden="true" />
-              </Link>
+              {siteConfig.app.apkUrl ? (
+                <a
+                  href={siteConfig.app.apkUrl}
+                  download
+                  onClick={dismiss}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-charcoal px-3.5 py-2 text-[0.66rem] font-bold text-white transition hover:bg-black"
+                >
+                  <Download className="h-3 w-3" aria-hidden="true" />
+                  {c.appDownload.installCta}
+                </a>
+              ) : (
+                <Link
+                  to="/#get-the-app"
+                  onClick={dismiss}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-charcoal px-3.5 py-2 text-[0.66rem] font-bold text-white transition hover:bg-black"
+                >
+                  {c.appDownload.installCta}
+                  <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                </Link>
+              )}
             </div>
           </motion.div>
         </motion.div>

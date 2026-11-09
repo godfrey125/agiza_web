@@ -15,3 +15,10 @@ for a published Agiza app.
 If a listing is not published, leave its environment variable blank. The
 homepage then shows a clearly labelled “Coming soon” platform card instead of a
 download badge.
+
+## Direct Android APK
+
+The Android APK supplied for Agiza is served from `public/downloads/agiza.apk`
+and is separate from the store badges. `VITE_APP_APK_URL` defaults to
+`/downloads/agiza.apk`. The site presents the APK as a direct Android download;
+it does not imply a Google Play or App Store listing.

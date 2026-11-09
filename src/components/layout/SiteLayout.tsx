@@ -2,6 +2,7 @@ import { Suspense, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
+import { InstallAppBand } from './InstallAppBand'
 import { AppInstallPrompt } from '../home/AppInstallPrompt'
 import { useCopy } from '../../i18n'
 
@@ -36,6 +37,8 @@ function PageFallback() {
 }
 
 export function SiteLayout() {
+  const { pathname } = useLocation()
+
   return (
     <div className="flex min-h-dvh flex-col bg-brand-cream">
       <Navbar />
@@ -45,6 +48,7 @@ export function SiteLayout() {
         </Suspense>
       </main>
       <AppInstallPrompt />
+      {pathname === '/' ? null : <InstallAppBand />}
       <Footer />
     </div>
   )

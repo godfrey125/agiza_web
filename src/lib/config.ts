@@ -30,11 +30,17 @@ export const siteConfig = {
     },
   },
   /**
-   * App availability is intentionally empty until a verified, published release
-   * exists. A version, badge or download link is shown only when its value is
-   * supplied at build time. No store listing is invented by the website.
+   * App availability. The supplied Android APK is served locally by default.
+   * Store badges and release metadata remain blank until they are verified, so
+   * the site never invents a store listing or release detail.
    */
   app: {
+    /**
+     * Direct Android APK download. The file lives in public/downloads so it is
+     * copied into the production build. Override with VITE_APP_APK_URL only if
+     * the same APK is hosted elsewhere.
+     */
+    apkUrl: import.meta.env.VITE_APP_APK_URL || '/downloads/agiza.apk',
     version: import.meta.env.VITE_APP_VERSION || '',
     size: import.meta.env.VITE_APP_SIZE || '',
     releaseDate: import.meta.env.VITE_APP_RELEASE_DATE || '',
