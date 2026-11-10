@@ -9,15 +9,18 @@ import { Badge } from '../components/ui/Badge'
 import { Button, ButtonLink } from '../components/ui/Button'
 import { TextInput } from '../components/ui/Field'
 import { Eyebrow } from '../components/ui/Layout'
-import { useCopy } from '../i18n'
+import { useCopy, useI18n } from '../i18n'
+import { controlCopy } from '../i18n/control'
 import { useAuth } from '../lib/auth'
-import { ApiError } from '../lib/api'
+import { ApiError, submitPublicAppeal } from '../lib/api'
 import { formatPhoneTZ, isValidTZPhone } from '../lib/utils'
 
 type Step = 'phone' | 'code'
 
 export function Login() {
   const c = useCopy()
+  const { lang } = useI18n()
+  const ac = controlCopy[lang]
   const { sendOtp, confirmOtp, isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -26,6 +29,10 @@ export function Login() {
   const [devOtp, setDevOtp] = useState('')
   const [serverError, setServerError] = useState('')
   const [resending, setResending] = useState(false)
+  const [showAppeal, setShowAppeal] = useState(false)
+  const [appealMessage, setAppealMessage] = useState('')
+  const [appealStatus, setAppealStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [appealError, setAppealError] = useState('')
 
   const phoneSchema = useMemo(
     () =>
@@ -62,6 +69,9 @@ export function Login() {
 
   const submitPhone = phoneForm.handleSubmit(async (values) => {
     setServerError('')
+    setShowAppeal(false)
+    setAppealStatus('idle')
+    setAppealError('')
     try {
       const result = await sendOtp(values.phone)
       setPhone(formatPhoneTZ(values.phone))
@@ -87,8 +97,28 @@ export function Login() {
       }
     } catch (error) {
       setServerError(error instanceof ApiError ? error.message : c.auth.errorCode)
+      if (error instanceof ApiError && error.status === 403) {
+        setShowAppeal(true)
+      }
     }
   })
+
+  const submitAppeal = async () => {
+    setAppealError('')
+    if (appealMessage.trim().length < 20) {
+      setAppealError(ac.loginAppeal.messageHint)
+      return
+    }
+    setAppealStatus('sending')
+    try {
+      await submitPublicAppeal(phone, appealMessage.trim())
+      setAppealStatus('sent')
+      setAppealMessage('')
+    } catch (error) {
+      setAppealStatus('error')
+      setAppealError(error instanceof ApiError ? error.message : ac.loginAppeal.error)
+    }
+  }
 
   const resend = async () => {
     setServerError('')
@@ -210,6 +240,56 @@ export function Login() {
                 <Alert tone="error" className="mb-5" title={c.auth.errorGeneric}>
                   {serverError}
                 </Alert>
+              ) : null}
+
+              {showAppeal && step === 'code' ? (
+                <div className="mb-5 rounded-2xl border border-brand-line bg-brand-cream/60 p-4">
+                  {appealStatus === 'sent' ? (
+                    <Alert tone="success" title={ac.loginAppeal.title}>
+                      {ac.loginAppeal.success}
+                    </Alert>
+                  ) : (
+                    <>
+                      <h3 className="font-display text-base font-extrabold tracking-[-0.02em] text-brand-charcoal">
+                        {ac.loginAppeal.title}
+                      </h3>
+                      <p className="mt-1 text-xs leading-5 text-brand-muted">{ac.loginAppeal.body}</p>
+                      <textarea
+                        value={appealMessage}
+                        onChange={(event) => setAppealMessage(event.target.value)}
+                        placeholder={ac.loginAppeal.placeholder}
+                        rows={4}
+                        className="input-base mt-3 resize-y"
+                      />
+                      <p className="field-hint">{ac.loginAppeal.messageHint}</p>
+                      {appealError ? (
+                        <p className="field-error" role="alert">{appealError}</p>
+                      ) : null}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => void submitAppeal()}
+                          loading={appealStatus === 'sending'}
+                          disabled={appealStatus === 'sending'}
+                        >
+                          {appealStatus === 'sending' ? ac.loginAppeal.submitting : ac.loginAppeal.submit}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            setShowAppeal(false)
+                            setAppealError('')
+                          }}
+                        >
+                          {ac.loginAppeal.close}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : null}
 
               {step === 'phone' ? (

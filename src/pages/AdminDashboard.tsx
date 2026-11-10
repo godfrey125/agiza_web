@@ -11,12 +11,14 @@ import {
   Clock3,
   Download,
   Eye,
+  Gavel,
   Globe2,
   Layers,
   Monitor,
   MousePointerClick,
   RefreshCw,
   Repeat2,
+  ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   Smartphone,
@@ -27,6 +29,7 @@ import {
   UserCheck,
   UserPlus,
   Users,
+  UserX,
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
@@ -36,10 +39,14 @@ import { Button } from '../components/ui/Button'
 import { Eyebrow } from '../components/ui/Layout'
 import { useI18n } from '../i18n'
 import { adminCopy } from '../i18n/admin'
+import { controlCopy } from '../i18n/control'
 import {
   ApiError,
   fetchAdminDashboard,
+  fetchAdminSummary,
+  type AccountActionType,
   type AdminDashboardData,
+  type AdminSummary,
   type AnalyticsDailyPoint,
 } from '../lib/api'
 import { cn, formatDateTime } from '../lib/utils'
@@ -321,8 +328,10 @@ function DeviceIcon({ device }: { device: string }) {
 export function AdminDashboard() {
   const { lang } = useI18n()
   const d = adminCopy[lang]
+  const c = controlCopy[lang]
   const [days, setDays] = useState<number>(7)
   const [data, setData] = useState<AdminDashboardData | null>(null)
+  const [summary, setSummary] = useState<AdminSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -332,6 +341,12 @@ export function AdminDashboard() {
     try {
       const response = await fetchAdminDashboard(days)
       setData(response)
+      try {
+        const governance = await fetchAdminSummary()
+        setSummary(governance)
+      } catch {
+        setSummary(null)
+      }
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 403) {
         setError(d.page.errorBody)
@@ -369,6 +384,7 @@ export function AdminDashboard() {
   const topSourceMax = Math.max(1, ...(data?.top_sources.map((row) => row.views) || []))
   const browserMax = Math.max(1, ...(data?.browsers.map((row) => row.views) || []))
   const deviceMax = Math.max(1, ...(data?.devices.map((row) => row.views) || []))
+  const riskMax = Math.max(1, ...Object.values(summary?.risk || { low: 1 }))
 
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -523,6 +539,116 @@ export function AdminDashboard() {
                 tone="neutral"
               />
             </section>
+
+            {summary ? (
+              <section className="mt-5">
+                <Panel
+                  title={c.trust.title}
+                  body={c.trust.lead}
+                  action={
+                    <Link
+                      to="/admin/trust"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-brand-dark underline underline-offset-4"
+                    >
+                      {c.nav.trust}
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <MiniStat icon={Gavel} label={c.trust.totalActions} value={formatNumber(summary.governance.total_actions)} />
+                    <MiniStat icon={ShieldAlert} label={c.trust.actions7d} value={formatNumber(summary.governance.actions_7d)} />
+                    <MiniStat icon={UserX} label={c.trust.investigations} value={formatNumber(summary.governance.open_investigations)} />
+                    <MiniStat icon={Clock3} label={c.trust.appeals} value={formatNumber(summary.governance.pending_appeals)} />
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <MiniStat icon={ShieldAlert} label={c.trust.suspendedAccounts} value={formatNumber(summary.account_states.temporarily_suspended)} />
+                    <MiniStat icon={ShieldAlert} label={c.trust.restrictedAccounts} value={formatNumber(summary.account_states.restricted)} />
+                    <MiniStat icon={UserX} label={c.trust.terminatedAccounts} value={formatNumber(summary.account_states.terminated)} />
+                    <MiniStat icon={ShieldCheck} label={c.states.PENDING_VERIFICATION} value={formatNumber(summary.account_states.pending_verification)} />
+                  </div>
+
+                  <div className="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+                    <div>
+                      <p className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-brand-muted">
+                        {c.trust.riskTitle}
+                      </p>
+                      <div className="mt-3 space-y-2.5">
+                        {(Object.keys(c.risk) as Array<keyof typeof c.risk>).map((level) => {
+                          const value = summary.risk[level.toLowerCase() as 'low' | 'medium' | 'high' | 'critical']
+                          return (
+                            <div key={level}>
+                              <div className="flex items-center justify-between gap-2">
+                                <Badge tone={level === 'CRITICAL' || level === 'HIGH' ? 'error' : level === 'MEDIUM' ? 'warning' : 'neutral'}>
+                                  {c.risk[level]}
+                                </Badge>
+                                <span className="text-[0.68rem] font-bold tabular-nums text-brand-charcoal">{value}</span>
+                              </div>
+                              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-brand-cream">
+                                <div
+                                  className={cn(
+                                    'h-full rounded-full',
+                                    level === 'CRITICAL' || level === 'HIGH'
+                                      ? 'bg-brand-error'
+                                      : level === 'MEDIUM'
+                                        ? 'bg-brand-warning'
+                                        : 'bg-brand-charcoal',
+                                  )}
+                                  style={{ width: `${Math.max(3, Math.round((value / riskMax) * 100))}%` }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-brand-muted">
+                        {c.trust.recentTitle}
+                      </p>
+                      {summary.recent_actions.length === 0 ? (
+                        <p className="mt-3 rounded-2xl border border-dashed border-brand-line bg-brand-cream/50 p-3 text-xs text-brand-muted">
+                          {c.trust.recentEmpty}
+                        </p>
+                      ) : (
+                        <ul className="mt-1 divide-y divide-brand-line">
+                          {summary.recent_actions.slice(0, 4).map((record) => (
+                            <li key={record.id} className="py-2.5">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-xs font-bold text-brand-charcoal">
+                                  {c.actionLabels[record.action as AccountActionType] || record.action_label}
+                                </p>
+                                <Badge tone="cream">{record.category_label}</Badge>
+                              </div>
+                              <p className="mt-0.5 line-clamp-1 text-[0.65rem] text-brand-muted">
+                                {record.reason} · {record.actor_name}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link to="/admin/users" className="inline-flex items-center gap-1.5 rounded-full bg-brand-charcoal px-3.5 py-2 text-xs font-bold text-white">
+                      {c.nav.users}
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                    <Link to="/admin/audit" className="inline-flex items-center gap-1.5 rounded-full border border-brand-line bg-white px-3.5 py-2 text-xs font-bold text-brand-charcoal">
+                      {c.nav.audit}
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                    <Link to="/admin/staff" className="inline-flex items-center gap-1.5 rounded-full border border-brand-line bg-white px-3.5 py-2 text-xs font-bold text-brand-charcoal">
+                      {c.nav.staff}
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </Panel>
+              </section>
+            ) : null}
 
             <div className="mt-5 grid gap-5 xl:grid-cols-[1.5fr_1fr]">
               <Panel title={d.traffic.title} body={d.traffic.body}>

@@ -53,7 +53,11 @@ npm run lint       # oxlint
 | `/register/vendor` | Protected five-step vendor application |
 | `/register/rider` | Protected five-step rider application |
 | `/application-status` | Protected, server-confirmed application tracking |
-| `/admin` | Protected staff overview with real visitor analytics |
+| `/admin` | Protected staff overview with real visitor analytics and governance summary |
+| `/admin/users` | Account directory, enforcement actions, history and appeals |
+| `/admin/trust` | Trust and safety metrics, risk distribution and appeal decisions |
+| `/admin/audit` | Immutable staff audit trail with before/after values |
+| `/admin/staff` | Staff role assignment for super administrators |
 | `/admin/applications` | Protected staff review queue |
 | `/contact`, `/faq` | Support information and contact form |
 | `/privacy`, `/terms` | Legal drafts marked for legal review |
@@ -146,13 +150,38 @@ promote that user in the Django shell:
 
 ```bash
 cd /path/to/agiza-master/backend
-.venv/bin/python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); u=U.objects.get(phone='+2557XXXXXXXX'); u.role=U.Role.ADMIN; u.is_staff=True; u.save()"
+.venv/bin/python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); u=U.objects.get(phone='+2557XXXXXXXX'); u.role=U.Role.ADMIN; u.is_staff=True; u.staff_role='SUPER_ADMIN'; u.save()"
 ```
 
 Sign in through the website with that phone number and OTP; the `/admin` link
 appears for staff users. Production needs a shared OTP cache such as Redis and a
 strong `SECRET_KEY`, and the frontend needs `VITE_API_BASE_URL` pointing to the
 deployed HTTPS API.
+
+## Account governance and control center
+
+The Django backend's `administration` app provides server-enforced account
+governance. The website surfaces it through the protected `/admin` routes:
+
+- account warnings, suspensions, restrictions, sign-in locks, session revocation,
+  restoration and permanent termination;
+- violation categories, written reasons, supporting evidence and internal notes;
+- immutable audit records with actor, target, reason, category and before/after
+  values;
+- user notifications and a public appeal endpoint for blocked accounts;
+- granular staff roles: `SUPER_ADMIN`, `OPERATIONS_MANAGER`,
+  `VERIFICATION_OFFICER`, `FINANCE_OFFICER`, `CUSTOMER_SUPPORT`,
+  `TRUST_SAFETY_OFFICER` and `CONTENT_MANAGER`.
+
+The website APIs are under `/api/admin/` plus
+`POST /api/account/appeals/public/`. Permanent termination requires a written
+reason, evidence and the typed confirmation `TERMINATE`. A blocked user can
+submit an appeal from the sign-in page after OTP verification returns `403`;
+the public response is deliberately generic to avoid phone-number enumeration.
+
+The backend must run its migrations before these screens are used. Existing
+`ADMIN` users are backfilled to `SUPER_ADMIN`; new staff accounts need an
+explicit `staff_role` and must not be granted roles their duties do not require.
 
 ## Partner application contract
 
@@ -234,6 +263,10 @@ to external storage, set `VITE_APP_APK_URL` to its public HTTPS URL.
 - Phone OTP login works against the configured Django API.
 - `/admin` shows live backend counts for staff users and an explicit unavailable
   state when the analytics API is not configured.
+- Account actions, staff role changes and appeal decisions require the matching
+  backend permission and leave audit records.
+- Blocked users can submit an appeal from the sign-in page without exposing
+  whether a phone number is registered.
 - Registration routes redirect unauthenticated visitors to `/login`.
 - Submission is disabled with a clear message when the partner API is absent.
 - No contact details, approvals, reference numbers, testimonials, partner logos

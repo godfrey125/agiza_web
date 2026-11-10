@@ -32,6 +32,18 @@ const AdminDashboard = lazy(() =>
 const AdminApplications = lazy(() =>
   import('./pages/AdminApplications').then((module) => ({ default: module.AdminApplications })),
 )
+const AdminUsers = lazy(() =>
+  import('./pages/AdminUsers').then((module) => ({ default: module.AdminUsers })),
+)
+const AdminTrust = lazy(() =>
+  import('./pages/AdminTrust').then((module) => ({ default: module.AdminTrust })),
+)
+const AdminAudit = lazy(() =>
+  import('./pages/AdminAudit').then((module) => ({ default: module.AdminAudit })),
+)
+const AdminStaff = lazy(() =>
+  import('./pages/AdminStaff').then((module) => ({ default: module.AdminStaff })),
+)
 const Contact = lazy(() => import('./pages/Contact').then((module) => ({ default: module.Contact })))
 const FAQ = lazy(() => import('./pages/FAQ').then((module) => ({ default: module.FAQ })))
 const Privacy = lazy(() => import('./pages/Legal').then((module) => ({ default: module.Privacy })))
@@ -53,7 +65,11 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="trust" element={<AdminTrust />} />
             <Route path="applications" element={<AdminApplications />} />
+            <Route path="audit" element={<AdminAudit />} />
+            <Route path="staff" element={<AdminStaff />} />
           </Route>
           <Route element={<SiteLayout />}>
             <Route index element={<Home />} />
