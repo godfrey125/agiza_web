@@ -69,6 +69,7 @@ See `.env.example` and `docs/PARTNER_API.md`.
 | Variable | Behaviour when blank |
 | --- | --- |
 | `VITE_API_BASE_URL` | Falls back to `http://localhost:8000/api` |
+| `VITE_ANALYTICS_URL` | Restaurant analytics workspace for approved vendors; falls back to `http://localhost:5173` |
 | `VITE_PARTNER_API_BASE_URL` | Registration submission, tracking and staff review stay disabled |
 | `VITE_CONTACT_ENDPOINT` | Contact form is disabled |
 | `VITE_SITE_URL` | No canonical domain is assumed |
@@ -94,6 +95,14 @@ soon” platform card for that store. See [`docs/APP_BADGES.md`](docs/APP_BADGES
 for badge sources and usage rules.
 
 All `VITE_*` values are public in the browser bundle. Do not put secrets there.
+
+## Agiza Analytics
+
+Approved vendors can open the **Agiza Analytics** restaurant workspace from the
+navigation bar, the footer and the vendors page. The link is configured with
+`VITE_ANALYTICS_URL` and opens in a new tab, so the marketing site and the
+dashboard stay independently deployable. The Android app links to the same
+workspace from the vendor profile.
 
 ## Authentication
 

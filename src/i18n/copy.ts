@@ -18,6 +18,7 @@ const en = {
     account: 'My account',
     status: 'Application status',
     admin: 'Review applications',
+    analytics: 'Restaurant analytics',
     logout: 'Log out',
     signedInAs: 'Signed in as',
   },
@@ -569,6 +570,10 @@ const en = {
     ctaTitle: 'Ready to register your business?',
     ctaBody:
       'Create an account, complete the five-step application and submit it for verification.',
+    analyticsTitle: 'Already selling on Agiza?',
+    analyticsBody:
+      'Open your restaurant analytics workspace to manage menu, orders, inventory and reports.',
+    analyticsCta: 'Open Agiza Analytics',
   },
   riders: {
     eyebrow: 'For delivery riders',
@@ -1102,6 +1107,7 @@ const en = {
     language: 'Language',
     installApp: 'Install Agiza',
     installBody: 'Download the Android APK directly.',
+    analytics: 'Restaurant analytics',
   },
   legal: {
     bannerTitle: 'Legal review required',
@@ -1222,6 +1228,7 @@ export const copy: Record<'en' | 'sw', Copy> = {
       account: 'Akaunti yangu',
       status: 'Hali ya maombi',
       admin: 'Kagua maombi',
+      analytics: 'Uchambuzi wa mgahawa',
       logout: 'Toka',
       signedInAs: 'Umeingia kama',
     },
@@ -1773,6 +1780,10 @@ export const copy: Record<'en' | 'sw', Copy> = {
       ctaTitle: 'Uko tayari kusajili biashara yako?',
       ctaBody:
         'Unda akaunti, kamilisha maombi ya hatua tano na uwasilishe kwa uthibitisho.',
+      analyticsTitle: 'Tayari unauza kwenye Agiza?',
+      analyticsBody:
+        'Fungua dashibodi yako ya uchambuzi wa mgahawa kusimamia menyu, oda, bidhaa na ripoti.',
+      analyticsCta: 'Fungua Agiza Analytics',
     },
     riders: {
       eyebrow: 'Kwa watoa usafirishaji',
@@ -2306,6 +2317,7 @@ export const copy: Record<'en' | 'sw', Copy> = {
       language: 'Lugha',
       installApp: 'Sakinisha Agiza',
       installBody: 'Pakua APK ya Android moja kwa moja.',
+      analytics: 'Uchambuzi wa mgahawa',
     },
     legal: {
       bannerTitle: 'Ukaguzi wa kisheria unahitajika',

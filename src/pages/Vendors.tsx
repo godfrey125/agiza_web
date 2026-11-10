@@ -1,8 +1,9 @@
-import { ArrowRight, ClipboardCheck, FileCheck2, ShieldCheck, Store, Utensils } from 'lucide-react'
+import { ArrowRight, BarChart3, ClipboardCheck, FileCheck2, ShieldCheck, Store, Utensils } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
-import { ButtonLink } from '../components/ui/Button'
+import { ButtonLink, ExternalButtonLink } from '../components/ui/Button'
 import { Eyebrow, Section, SectionHeading } from '../components/ui/Layout'
 import { useCopy } from '../i18n'
+import { siteConfig } from '../lib/config'
 
 export function Vendors() {
   const c = useCopy()
@@ -131,6 +132,28 @@ export function Vendors() {
               <Badge tone="orange">{c.labels.underReview}</Badge>
               <Badge tone="orange">{c.labels.decision}</Badge>
             </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="bg-white">
+        <div className="container-page">
+          <div className="flex flex-col gap-5 rounded-[2rem] border border-brand-line bg-brand-cream/50 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-9">
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-brand-dark">
+                <BarChart3 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {c.vendors.analyticsTitle}
+              </p>
+              <p className="mt-2 max-w-xl text-sm leading-7 text-brand-muted">{c.vendors.analyticsBody}</p>
+            </div>
+            <ExternalButtonLink
+              href={siteConfig.analyticsUrl}
+              size="lg"
+              className="w-full whitespace-normal text-center sm:w-auto sm:whitespace-nowrap"
+            >
+              {c.vendors.analyticsCta}
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+            </ExternalButtonLink>
           </div>
         </div>
       </Section>

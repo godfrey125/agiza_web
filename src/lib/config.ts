@@ -16,6 +16,11 @@ export const siteConfig = {
    */
   contactEndpoint: (import.meta.env.VITE_CONTACT_ENDPOINT || '').replace(/\/$/, ''),
   siteUrl: import.meta.env.VITE_SITE_URL || '',
+  /**
+   * Restaurant analytics workspace (Agiza Analytics). Approved vendors open
+   * their dashboard from the navigation, footer and vendor page.
+   */
+  analyticsUrl: (import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5173').replace(/\/$/, ''),
   support: {
     /** Intentionally empty until verified by Agiza. */
     email: '',

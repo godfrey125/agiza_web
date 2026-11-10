@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
+  BarChart3,
   ChevronDown,
   ClipboardCheck,
   Download,
@@ -230,6 +231,15 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          <a
+            href={siteConfig.analyticsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden h-10 items-center gap-1.5 rounded-full border border-brand-line bg-white px-3 text-xs font-bold text-brand-charcoal shadow-sm transition hover:border-brand-charcoal/25 hover:bg-brand-cream md:inline-flex"
+          >
+            <BarChart3 className="h-3.5 w-3.5 text-brand-dark" aria-hidden="true" />
+            {c.nav.analytics}
+          </a>
           {siteConfig.app.apkUrl ? (
             <a
               href={siteConfig.app.apkUrl}
@@ -489,6 +499,29 @@ export function Navbar() {
                   ))}
                 </div>
               </div>
+
+              <a
+                href={siteConfig.analyticsUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="mt-4 flex items-center justify-between gap-4 rounded-[1.35rem] border border-white/70 bg-white/55 p-4 shadow-[0_24px_60px_-38px_rgba(23,22,20,0.42)] backdrop-blur-2xl transition hover:bg-white/80 sm:p-5"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-charcoal text-brand-orange">
+                    <BarChart3 className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span>
+                    <span className="block text-[0.62rem] font-bold uppercase tracking-[0.2em] text-brand-muted">
+                      {c.footer.partners}
+                    </span>
+                    <span className="mt-0.5 block text-[0.98rem] font-semibold text-brand-charcoal">
+                      {c.nav.analytics}
+                    </span>
+                  </span>
+                </span>
+                <ArrowRight className="h-4 w-4 shrink-0 text-brand-muted" aria-hidden="true" />
+              </a>
 
               <div className="mt-8 flex items-center justify-between gap-4 border-t border-brand-charcoal/10 pt-5 text-xs text-brand-muted">
                 <span className="flex items-center gap-2">
