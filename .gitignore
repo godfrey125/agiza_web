@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 .firebase
+
+# Local APK for the dev server; published as a GitHub Release asset instead.
+public/downloads/agiza.apk
 .env
 .env.*
 !.env.example
