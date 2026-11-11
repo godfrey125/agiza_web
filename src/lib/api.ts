@@ -186,7 +186,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   } = options
 
   const run = async (token: string | null) => {
-    const headers: Record<string, string> = { Accept: 'application/json' }
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      // ngrok's free tier injects an HTML warning into browser requests unless
+      // this header is present. Harmless for any other backend.
+      'ngrok-skip-browser-warning': 'true',
+    }
     if (!formData) headers['Content-Type'] = 'application/json'
     if (token) headers.Authorization = `Bearer ${token}`
 

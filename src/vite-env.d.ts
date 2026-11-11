@@ -18,3 +18,15 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+interface Window {
+  /** Optional overrides loaded from /runtime-config.js before the app boots. */
+  __AGIZA_CONFIG__?: {
+    apiBaseUrl?: string
+    analyticsUrl?: string
+    siteUrl?: string
+    partnerApiBaseUrl?: string
+    contactEndpoint?: string
+    apkUrl?: string
+  }
+}

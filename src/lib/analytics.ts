@@ -92,6 +92,7 @@ export function AnalyticsTracker() {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      'ngrok-skip-browser-warning': 'true',
     }
     const access = tokenStore.access
     if (access) headers.Authorization = `Bearer ${access}`

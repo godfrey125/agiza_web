@@ -247,6 +247,36 @@ approvals.
    `Content-Disposition: attachment; filename="agiza.apk"` so Android browsers
    download the supplied APK correctly.
 
+### Firebase Hosting
+
+The site is deployed to Firebase Hosting project `agiza-3884d`:
+
+- https://agiza-3884d.web.app
+- https://agiza-3884d.firebaseapp.com
+
+Deploy with:
+
+```bash
+AGIZA_API_BASE_URL=https://api.example.com/api \
+AGIZA_APK_URL=https://github.com/godfrey125/agiza_web/releases/download/agiza-apk-v1/agiza.apk \
+./deploy-firebase.sh
+```
+
+The script builds, writes `dist/runtime-config.js`, and runs
+`firebase deploy --only hosting`. `runtime-config.js` overrides the `VITE_*`
+build-time defaults, so the API URL and APK URL can change without a rebuild —
+edit `dist/runtime-config.js` and redeploy, or pass the variables above.
+
+Firebase Hosting's Spark plan rejects executable files, so `firebase.json`
+ignores `**/*.apk`. The Android APK is published as a GitHub Release asset and
+linked through `AGIZA_APK_URL`; `/downloads/agiza.apk` remains available from
+the local Vite dev server only.
+
+Add every deployed origin (for example `https://agiza-3884d.web.app`) to the
+Django `CORS_ALLOWED_ORIGINS` list. Firestore is provisioned on the project.
+Firebase Authentication requires the Blaze plan (Identity Platform), so the
+current deployment keeps Django JWT authentication.
+
 ### Vercel
 
 `vercel.json` configures the Vite build, SPA fallback, and the APK response
