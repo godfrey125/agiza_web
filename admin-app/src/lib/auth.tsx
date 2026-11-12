@@ -1,16 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { api, ApiError, getToken, setToken } from './api'
+import { api, getToken } from './api'
 import { marketplaceTokenStore } from './marketplace'
 import type { User } from './types'
 
 interface AuthContextValue {
   user: User | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ requires2fa: boolean; challengeToken?: string; user?: User }>
-  verifyTwoFactor: (challengeToken: string, code: string) => Promise<User>
-  adoptSession: (token: string, user: User) => void
   signOut: () => Promise<void>
   refresh: () => Promise<void>
   setUser: (user: User | null) => void
@@ -34,8 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const data = await api.get<{ user: User }>('/auth/me')
       setUser(data.user)
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) setToken(null)
+    } catch {
       setUser(null)
     } finally {
       setLoading(false)
@@ -49,34 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('agiza-admin:unauthorized', unauthorized)
   }, [refresh])
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const data = await api.post<{ requires2fa?: boolean; challengeToken?: string; token?: string; user?: User }>('/auth/login', { email, password })
-    if (data.requires2fa) {
-      return { requires2fa: true, challengeToken: data.challengeToken }
-    }
-    if (!data.token || !data.user) throw new ApiError('The sign-in response was incomplete.', 500)
-    setToken(data.token)
-    setUser(data.user)
-    return { requires2fa: false, user: data.user }
-  }, [])
-
-  const verifyTwoFactor = useCallback(async (challengeToken: string, code: string) => {
-    const data = await api.post<{ token: string; user: User }>('/auth/verify-2fa', { challengeToken, code })
-    setToken(data.token)
-    setUser(data.user)
-    return data.user
-  }, [])
-
-  const adoptSession = useCallback((token: string, nextUser: User) => {
-    setToken(token)
-    setUser(nextUser)
-  }, [])
-
   const signOut = useCallback(async () => {
     try {
       await api.post('/auth/logout')
     } catch { /* the local session is cleared regardless */ }
-    setToken(null)
     marketplaceTokenStore.clear()
     setUser(null)
     window.location.replace(ADMIN_HOME)
@@ -88,8 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const value = useMemo<AuthContextValue>(() => ({
-    user, loading, signIn, verifyTwoFactor, adoptSession, signOut, refresh, setUser, hasPermission,
-  }), [user, loading, signIn, verifyTwoFactor, adoptSession, signOut, refresh, hasPermission])
+    user, loading, signOut, refresh, setUser, hasPermission,
+  }), [user, loading, signOut, refresh, hasPermission])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

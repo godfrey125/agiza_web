@@ -3,7 +3,6 @@ import { marketplaceTokenStore } from './marketplace'
 // The restaurant workspace is served by the same deployment at
 // /api/restaurant. The Django marketplace API stays at /api.
 const API_BASE = (import.meta.env.VITE_ADMIN_API_URL || '/api/restaurant').replace(/\/$/, '')
-const LEGACY_TOKEN_KEY = 'agiza_analytics_token'
 
 export class ApiError extends Error {
   status: number
@@ -23,12 +22,7 @@ export class ApiError extends Error {
  * provider, so there is only one token to refresh and one identity to audit.
  */
 export function getToken() {
-  return marketplaceTokenStore.access || localStorage.getItem(LEGACY_TOKEN_KEY)
-}
-
-export function setToken(token: string | null) {
-  if (token) localStorage.setItem(LEGACY_TOKEN_KEY, token)
-  else localStorage.removeItem(LEGACY_TOKEN_KEY)
+  return marketplaceTokenStore.access
 }
 
 export function assetUrl(url?: string | null) {
@@ -77,7 +71,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     : await response.text().catch(() => '')
   if (!response.ok) {
     if (response.status === 401) {
-      localStorage.removeItem(LEGACY_TOKEN_KEY)
       // The marketplace provider listens for this and refreshes the Django JWT
       // or signs the admin out if the refresh token is no longer valid.
       window.dispatchEvent(new CustomEvent('agiza-admin:unauthorized'))

@@ -146,12 +146,6 @@ export async function transaction(fn) {
   }
 }
 
-// Kept for scripts that used to create the SQLite schema. Supabase tables are
-// created by supabase/migrations/20261111000000_restaurant_schema.sql instead.
-export async function initSchema() {
-  return pool.query('select 1')
-}
-
 export async function closePool() {
   await pool.end()
 }

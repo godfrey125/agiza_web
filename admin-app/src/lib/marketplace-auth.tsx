@@ -5,7 +5,6 @@ import {
   isMarketplaceAdmin,
   marketplaceConfig,
   marketplaceFetchMe,
-  marketplaceLogin,
   marketplaceTokenStore,
   type AuthTokens,
   type AuthUser,
@@ -17,7 +16,6 @@ interface MarketplaceAuthValue {
   permissions: string[]
   loading: boolean
   error: string
-  signIn: (email: string, password: string) => Promise<void>
   signInWithSession: (tokens: AuthTokens, user: AuthUser) => Promise<void>
   signOut: () => void
   refresh: () => Promise<void>
@@ -87,23 +85,6 @@ export function MarketplaceAuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('agiza-admin:unauthorized', onUnauthorized)
   }, [refresh])
 
-  const signIn = useCallback(
-    async (email: string, password: string) => {
-      setError('')
-      const response = await marketplaceLogin(email.trim(), password)
-      if (!isMarketplaceAdmin(response.user)) {
-        marketplaceTokenStore.clear()
-        throw new Error(
-          `Only ${marketplaceConfig.adminEmail} can open the platform admin panel.`,
-        )
-      }
-      marketplaceTokenStore.save(response.tokens, response.user)
-      setAdmin(response.user)
-      await loadPermissions(response.user)
-    },
-    [loadPermissions],
-  )
-
   const signInWithSession = useCallback(
     async (tokens: AuthTokens, user: AuthUser) => {
       setError('')
@@ -146,13 +127,12 @@ export function MarketplaceAuthProvider({ children }: { children: ReactNode }) {
       permissions,
       loading,
       error,
-      signIn,
       signInWithSession,
       signOut,
       refresh,
       hasPermission,
     }),
-    [admin, permissions, loading, error, signIn, signInWithSession, signOut, refresh, hasPermission],
+    [admin, permissions, loading, error, signInWithSession, signOut, refresh, hasPermission],
   )
 
   return (

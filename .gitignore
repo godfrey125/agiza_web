@@ -33,6 +33,12 @@ public/downloads/agiza.apk
 .env.*
 !.env.example
 
+# Local demo/backup data; never deployed.
+backend/fixtures/demo_marketplace_snapshot.json
+backend/fixtures/removed_demo_data.json
+backend/partners/management/commands/seed_demo_applications.py
+backend/vendors/management/commands/seed_marketplace.py
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

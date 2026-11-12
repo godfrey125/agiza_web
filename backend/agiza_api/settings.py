@@ -1,8 +1,7 @@
 """Agiza backend settings.
 
 Configuration comes from environment variables (see `.env.example`).
-SQLite is used when DATABASE_URL is not set (local development);
-production should set DATABASE_URL to a PostgreSQL URL.
+All persistent data lives in Supabase Postgres; DATABASE_URL is required.
 """
 import os
 from datetime import timedelta  # noqa: F401  (handy for overrides)
@@ -83,9 +82,13 @@ TEMPLATES = [{
     ]},
 }]
 
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+if not DATABASE_URL:
+    raise RuntimeError('DATABASE_URL is required. Agiza uses Supabase Postgres only.')
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+    'default': dj_database_url.parse(
+        DATABASE_URL,
         # Supabase's pooler caps session-mode clients (15 on the free plan).
         # Keeping connections alive per request thread exhausts that budget, so
         # close them after each request by default. Override with

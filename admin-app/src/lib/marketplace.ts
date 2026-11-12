@@ -227,14 +227,6 @@ export async function marketplaceRequest<T>(path: string, options: RequestOption
 /*                                  Auth                                      */
 /* -------------------------------------------------------------------------- */
 
-export function marketplaceLogin(identifier: string, password: string) {
-  return marketplaceRequest<{ tokens: AuthTokens; user: AuthUser }>('/users/auth/password-login/', {
-    method: 'POST',
-    auth: false,
-    body: { phone: identifier, password },
-  })
-}
-
 export function marketplaceFetchMe() {
   return marketplaceRequest<AuthUser>('/users/me/')
 }
