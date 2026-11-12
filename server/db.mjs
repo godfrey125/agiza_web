@@ -1,4 +1,14 @@
-import 'dotenv/config'
+// Vercel injects environment variables directly. Loading dotenv there is both
+// unnecessary and unreliable because the serverless bundle does not include
+// dotenv's package metadata for the `dotenv/config` subpath.
+if (!process.env.VERCEL) {
+  try {
+    await import('dotenv/config')
+  } catch (error) {
+    console.warn('[env] dotenv unavailable; using the existing process environment')
+  }
+}
+
 import os from 'node:os'
 import path from 'node:path'
 import pg from 'pg'
