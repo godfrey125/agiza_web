@@ -16,6 +16,18 @@ statistics or verification results. Visitor analytics and the staff dashboard
 read from the Django backend; if that backend is not configured, the dashboard
 shows an explicit unavailable state instead of sample numbers.
 
+### Live deployment
+
+- Public site: `https://agizawebs.vercel.app`
+- Admin console: `https://agizawebs.vercel.app/admin/`
+- Supabase project: `prhnakmkhbxxobzidijj`
+- Supabase Auth Site URL: `https://agizawebs.vercel.app`
+
+The Supabase redirect allow-list includes the production website callback,
+the admin callback, the legacy Firebase origins, local development origins and
+the Android `agiza://` deep links. The only accepted admin identity is
+`shorahgodfrey12@gmail.com`.
+
 ## Stack
 
 - React 19 + TypeScript + Vite (public site and admin SPA)
@@ -254,12 +266,17 @@ In the Supabase dashboard:
    client ID and secret. Authorized redirect URI:
    `https://<project-ref>.supabase.co/auth/v1/callback`.
 2. **Authentication → URL Configuration**: set the Site URL to the deployed
-   origin and add every redirect used by the website, admin console and app:
+   origin and add every redirect used by the website, admin console and app.
+   The production project is already configured with:
+   - `https://agizawebs.vercel.app` (Site URL)
+   - `https://agizawebs.vercel.app/auth/callback` (public site)
+   - `https://agizawebs.vercel.app/admin/marketplace/auth/callback` (admin console)
+   - `https://*-agiza2.vercel.app/**` (preview deployments)
+   - `https://agiza-3884d.web.app/**` and `https://agiza-3884d.firebaseapp.com/**`
+     (legacy Firebase origins)
    - `http://localhost:8080/auth/callback` (public site in development)
-   - `http://127.0.0.1:5173/admin/marketplace/auth/callback` (admin in development)
-   - `http://localhost:5173/admin/marketplace/auth/callback` (admin in development)
-   - `https://<production-domain>/auth/callback` (public site)
-   - `https://<production-domain>/admin/marketplace/auth/callback` (admin console)
+   - `http://localhost:5173/admin/marketplace/auth/callback` and
+     `http://127.0.0.1:5173/admin/marketplace/auth/callback` (admin in development)
    - `agiza://login-callback` (Android app)
 
 The Google button stays hidden while the Supabase URL/key are blank, so a
@@ -464,14 +481,16 @@ the restaurant API runs from `server/index.mjs`.
 
 ### 4. Finish Supabase auth configuration
 
-Add the production redirect URLs in **Authentication → URL Configuration**:
+The production project is already configured. For a new environment, add the
+redirect URLs in **Authentication → URL Configuration**:
 
 - `https://<production-domain>/auth/callback`
 - `https://<production-domain>/admin/marketplace/auth/callback`
 
 Add the production origin to the Django `CORS_ALLOWED_ORIGINS` and
 `CSRF_TRUSTED_ORIGINS` values, and set `ALLOWED_HOSTS` to include the Vercel
-domain (`.vercel.app`) and any custom domain.
+domain (`.vercel.app`) and any custom domain. The current production values use
+`https://agizawebs.vercel.app`.
 
 ### 5. First admin sign-in
 
