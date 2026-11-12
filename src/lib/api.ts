@@ -140,7 +140,11 @@ async function refreshAccessToken(): Promise<string | null> {
       try {
         const response = await fetch(`${siteConfig.apiBaseUrl}/users/auth/token/refresh/`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+          },
           body: JSON.stringify({ refresh }),
         })
         if (!response.ok) {
@@ -275,6 +279,26 @@ export async function verifyOtp(phone: string, otp: string) {
   )
 }
 
+export async function passwordLogin(identifier: string, password: string) {
+  return apiRequest<{ tokens: AuthTokens; user: AuthUser }>('/users/auth/password-login/', {
+    method: 'POST',
+    auth: false,
+    body: { phone: identifier, password },
+  })
+}
+
+/**
+ * Exchange a verified Supabase access token for the normal Agiza JWT pair.
+ * Used after Google/email sign-in; the backend creates or links the account.
+ */
+export async function supabaseExchange(accessToken: string) {
+  return apiRequest<{ tokens: AuthTokens; user: AuthUser }>('/users/auth/supabase/', {
+    method: 'POST',
+    auth: false,
+    body: { access_token: accessToken },
+  })
+}
+
 export async function fetchMe() {
   return apiRequest<AuthUser>('/users/me/')
 }
@@ -376,15 +400,33 @@ export async function submitApplication(
   })
 }
 
+export interface ApplicationAttachment {
+  id: number | string
+  code: string
+  label: string
+  kind: 'document' | 'image'
+  url: string
+  created_at?: string
+}
+
 export interface AdminApplication {
   id: number | string
   reference?: string
   application_type?: 'vendor' | 'rider'
-  applicant?: string
+  applicant?: number | string | null
   applicant_name?: string
+  applicant_phone?: string
+  applicant_email?: string
   status?: string
   submitted_at?: string
   updated_at?: string
+  decision_reason?: string
+  requested_information?: string
+  internal_notes?: string
+  decided_at?: string | null
+  reviewer_name?: string | null
+  payload?: Record<string, unknown>
+  attachments?: ApplicationAttachment[]
   [key: string]: unknown
 }
 

@@ -1,10 +1,11 @@
 type RuntimeConfig = Partial<{
   apiBaseUrl: string
-  analyticsUrl: string
   siteUrl: string
   partnerApiBaseUrl: string
   contactEndpoint: string
   apkUrl: string
+  supabaseUrl: string
+  supabaseAnonKey: string
 }>
 
 /**
@@ -25,11 +26,22 @@ export const siteConfig = {
   tagline: 'Good food. Your way.',
   description:
     'A Tanzanian food marketplace for discovery, dine-in ordering, delivery and custom food requests.',
+  /**
+   * Supabase owns Google and email identity. The public anon/publishable key is
+   * safe to ship in the browser; the backend verifies the resulting token.
+   */
+  supabaseUrl: resolveUrl(
+    runtimeConfig.supabaseUrl,
+    import.meta.env.VITE_SUPABASE_URL,
+    '',
+  ),
+  supabaseAnonKey:
+    runtimeConfig.supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   /** Existing Django REST API (Flutter app uses the same service). */
   apiBaseUrl: resolveUrl(
     runtimeConfig.apiBaseUrl,
     import.meta.env.VITE_API_BASE_URL,
-    'http://localhost:8000/api',
+    import.meta.env.DEV ? 'http://localhost:8000/api' : '/api',
   ),
   /**
    * Partner application endpoints that must be provided by the trusted backend.
@@ -50,15 +62,6 @@ export const siteConfig = {
     '',
   ),
   siteUrl: runtimeConfig.siteUrl || import.meta.env.VITE_SITE_URL || '',
-  /**
-   * Restaurant analytics workspace (Agiza Analytics). Approved vendors open
-   * their dashboard from the navigation, footer and vendor page.
-   */
-  analyticsUrl: resolveUrl(
-    runtimeConfig.analyticsUrl,
-    import.meta.env.VITE_ANALYTICS_URL,
-    'http://localhost:5173',
-  ),
   support: {
     /** Intentionally empty until verified by Agiza. */
     email: '',
@@ -103,3 +106,4 @@ export const siteConfig = {
 
 export const isPartnerApiConfigured = Boolean(siteConfig.partnerApiBaseUrl)
 export const isContactEndpointConfigured = Boolean(siteConfig.contactEndpoint)
+export const isSupabaseConfigured = Boolean(siteConfig.supabaseUrl && siteConfig.supabaseAnonKey)

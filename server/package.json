@@ -1,0 +1,20 @@
+{
+  "name": "agiza-restaurant-api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "dev": "node --watch index.mjs",
+    "start": "node index.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.23.1"
+  }
+}

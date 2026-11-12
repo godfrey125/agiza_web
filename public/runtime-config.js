@@ -8,7 +8,9 @@
  * Example:
  *   window.__AGIZA_CONFIG__ = {
  *     apiBaseUrl: 'https://api.agiza.co.tz/api',
- *     analyticsUrl: 'https://analytics.agiza.co.tz',
+ *     partnerApiBaseUrl: 'https://api.agiza.co.tz/api/partner',
+ *     supabaseUrl: 'https://prhnakmkhbxxobzidijj.supabase.co',
+ *     supabaseAnonKey: 'sb_publishable_...',
  *   };
  */
 window.__AGIZA_CONFIG__ = window.__AGIZA_CONFIG__ || {};

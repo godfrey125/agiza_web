@@ -1,0 +1,14 @@
+Django>=5.2,<5.3
+djangorestframework>=3.16
+djangorestframework-simplejwt>=5.3
+django-cors-headers>=4.6
+django-filter>=24.3
+drf-spectacular>=0.28
+python-dotenv>=1.0
+dj-database-url>=2.3
+psycopg[binary]>=3.2
+certifi>=2024.8.30
+firebase-admin>=6.6
+# Production background worker (request expiry). Dev can use `manage.py run_expiry_worker` instead.
+celery>=5.4
+redis>=5.2

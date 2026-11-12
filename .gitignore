@@ -13,6 +13,20 @@ dist-ssr
 *.local
 .firebase
 
+# Consolidated service artifacts
+.vercel
+admin-app/dist
+server/node_modules
+backend/.venv
+backend/__pycache__
+backend/**/__pycache__
+backend/*.pyc
+backend/**/*.pyc
+backend/staticfiles
+backend/media
+backend/db.sqlite3
+backend/.pytest_cache
+
 # Local APK for the dev server; published as a GitHub Release asset instead.
 public/downloads/agiza.apk
 .env

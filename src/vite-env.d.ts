@@ -13,6 +13,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_CHANGELOG_URL?: string
   readonly VITE_APP_PLAY_STORE_URL?: string
   readonly VITE_APP_APP_STORE_URL?: string
+  readonly VITE_SUPABASE_URL?: string
+  readonly VITE_SUPABASE_ANON_KEY?: string
 }
 
 interface ImportMeta {
@@ -23,10 +25,11 @@ interface Window {
   /** Optional overrides loaded from /runtime-config.js before the app boots. */
   __AGIZA_CONFIG__?: {
     apiBaseUrl?: string
-    analyticsUrl?: string
     siteUrl?: string
     partnerApiBaseUrl?: string
     contactEndpoint?: string
     apkUrl?: string
+    supabaseUrl?: string
+    supabaseAnonKey?: string
   }
 }

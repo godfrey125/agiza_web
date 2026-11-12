@@ -90,7 +90,6 @@ export function Footer() {
                 <li><Link className={linkClass} to="/register/vendor">{c.nav.vendorRegister}</Link></li>
                 <li><Link className={linkClass} to="/register/rider">{c.nav.riderRegister}</Link></li>
                 <li><Link className={linkClass} to="/application-status">{c.footer.status}</Link></li>
-                <li><a className={linkClass} href={siteConfig.analyticsUrl} target="_blank" rel="noreferrer">{c.footer.analytics}</a></li>
               </ul>
             </div>
             <div>

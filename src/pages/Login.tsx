@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Phone, ShieldCheck, Smartphone } from 'lucide-react'
+import { GoogleButton } from '../components/auth/GoogleButton'
 import { Alert } from '../components/ui/Alert'
 import { Badge } from '../components/ui/Badge'
 import { Button, ButtonLink } from '../components/ui/Button'
@@ -13,6 +14,7 @@ import { useCopy, useI18n } from '../i18n'
 import { controlCopy } from '../i18n/control'
 import { useAuth } from '../lib/auth'
 import { ApiError, submitPublicAppeal } from '../lib/api'
+import { isSupabaseConfigured } from '../lib/supabase'
 import { formatPhoneTZ, isValidTZPhone } from '../lib/utils'
 
 type Step = 'phone' | 'code'
@@ -91,9 +93,14 @@ export function Login() {
       if (from) {
         navigate(from, { replace: true })
       } else if (signedIn.role === 'admin') {
-        navigate('/admin', { replace: true })
-      } else {
+        // Platform administration lives in the separate Agiza Admin app.
+        navigate('/', { replace: true })
+      } else if (signedIn.role === 'vendor' || signedIn.role === 'rider') {
+        // Partners continue with their verification status; approved accounts
+        // open their role dashboard from there.
         navigate('/application-status', { replace: true })
+      } else {
+        navigate('/', { replace: true })
       }
     } catch (error) {
       setServerError(error instanceof ApiError ? error.message : c.auth.errorCode)
@@ -151,15 +158,11 @@ export function Login() {
                 {c.nav.status}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </ButtonLink>
-              {user.role === 'admin' ? (
-                <ButtonLink to="/admin" fullWidth size="lg" variant="secondary">
-                  {c.nav.admin}
-                </ButtonLink>
-              ) : (
+              {user.role !== 'admin' ? (
                 <ButtonLink to="/get-started" fullWidth size="lg" variant="secondary">
                   {c.common.becomePartner}
                 </ButtonLink>
-              )}
+              ) : null}
               <Button
                 type="button"
                 variant="ghost"
@@ -296,6 +299,19 @@ export function Login() {
                 <form onSubmit={submitPhone} noValidate>
                   <h2 className="font-display text-2xl font-extrabold tracking-tight text-brand-charcoal">{c.auth.title}</h2>
                   <p className="mt-2 text-sm leading-6 text-brand-muted">{c.auth.subtitle}</p>
+
+                  {isSupabaseConfigured ? (
+                    <div className="mt-6">
+                      <GoogleButton onError={setServerError} />
+                      <div className="mt-5 flex items-center gap-3">
+                        <span className="h-px flex-1 bg-brand-line" />
+                        <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-brand-muted">
+                          or use your phone
+                        </span>
+                        <span className="h-px flex-1 bg-brand-line" />
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="mt-6">
                     <TextInput

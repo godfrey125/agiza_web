@@ -3,14 +3,8 @@ import type { ReactNode } from 'react'
 import { useAuth } from '../../lib/auth'
 import { useCopy } from '../../i18n'
 
-export function ProtectedRoute({
-  children,
-  staffOnly = false,
-}: {
-  children: ReactNode
-  staffOnly?: boolean
-}) {
-  const { isAuthenticated, isStaff, isLoading } = useAuth()
+export function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
   const c = useCopy()
 
@@ -32,10 +26,6 @@ export function ProtectedRoute({
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
-  }
-
-  if (staffOnly && !isStaff) {
-    return <Navigate to="/application-status" replace />
   }
 
   return <>{children}</>

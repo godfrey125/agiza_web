@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply m-0 bg-cream font-sans text-ink antialiased;
+    min-width: 320px;
+  }
+  #root { min-height: 100vh; }
+  button, input, select, textarea { font: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+  ::selection { background: #fbd3c7; color: #252525; }
+  :focus-visible { outline: 3px solid rgba(240, 90, 50, .25); outline-offset: 2px; }
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #ddd5ca; border-radius: 999px; border: 2px solid #FAF7F2; }
+  ::-webkit-scrollbar-thumb:hover { background: #c9beb0; }
+}
+
+@layer components {
+  .app-bg { background: #FAF7F2; }
+  .card {
+    @apply rounded-2xl border border-line bg-white shadow-card;
+  }
+  .card-interactive {
+    @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-float;
+  }
+  .page-enter { @apply animate-fade-in; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white shadow-soft hover:bg-primary-dark hover:shadow-float active:translate-y-px;
+  }
+  .btn-secondary {
+    @apply btn border border-line bg-white text-ink hover:border-[#dcd3c7] hover:bg-[#fffdfa];
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-muted hover:bg-[#f5f0e9] hover:text-ink;
+  }
+  .btn-danger {
+    @apply btn bg-coral text-white shadow-soft hover:bg-[#d8402b] active:translate-y-px;
+  }
+  .btn-success {
+    @apply btn bg-success text-white shadow-soft hover:bg-[#35935a];
+  }
+  .btn-xs { @apply gap-1.5 rounded-lg px-2.5 py-1.5 text-xs; }
+  .btn-sm { @apply gap-1.5 rounded-lg px-3 py-2 text-xs; }
+  .icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white text-muted transition hover:border-[#e3d9cc] hover:bg-[#fffaf4] hover:text-ink;
+  }
+
+  .label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-muted; }
+  .input, .select, .textarea {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink shadow-[0_1px_0_rgba(37,37,37,0.02)] outline-none transition placeholder:text-[#aaa39a] focus:border-primary/70 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-[#f8f5f0];
+  }
+  .select {
+    @apply appearance-none bg-[right_12px_center] bg-no-repeat pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23777777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+  .textarea { @apply min-h-[104px] resize-y; }
+  .help { @apply mt-1 text-xs leading-5 text-muted; }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide;
+  }
+  .badge-orange { @apply badge bg-peach text-primary; }
+  .badge-green { @apply badge bg-soft-green text-success; }
+  .badge-yellow { @apply badge bg-soft-yellow text-[#9a7214]; }
+  .badge-red { @apply badge bg-soft-red text-coral; }
+  .badge-gray { @apply badge bg-[#f4f0ea] text-muted; }
+  .badge-blue { @apply badge bg-[#EEF4FF] text-[#3569B4]; }
+
+  .table-wrap { @apply overflow-x-auto rounded-2xl border border-line bg-white; }
+  .data-table { @apply w-full min-w-[720px] border-collapse text-left; }
+  .data-table thead th {
+    @apply border-b border-line bg-[#fcfaf6] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted;
+  }
+  .data-table tbody td { @apply border-b border-[#f4f0ea] px-4 py-3.5 text-sm align-middle; }
+  .data-table tbody tr:last-child td { @apply border-b-0; }
+  .data-table tbody tr { @apply transition hover:bg-[#fffdf9]; }
+  .table-primary { @apply font-semibold text-ink; }
+  .table-secondary { @apply mt-0.5 text-xs text-muted; }
+
+  .skeleton {
+    @apply rounded-xl bg-[linear-gradient(90deg,#f2eee7_0%,#fbf8f3_50%,#f2eee7_100%)] bg-[length:800px_100%];
+    animation: shimmer 1.6s linear infinite;
+  }
+  .divider { @apply h-px w-full bg-line; }
+  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-primary; }
+  .section-title { @apply font-display text-lg font-bold tracking-tight text-ink; }
+  .sidebar-link {
+    @apply relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#6f6b65] transition duration-200 hover:bg-[#fcf8f2] hover:text-ink;
+  }
+  .sidebar-link-active {
+    @apply bg-peach font-semibold text-primary;
+  }
+  .sidebar-link-active::before {
+    content: '';
+    @apply absolute -left-4 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-primary;
+  }
+  .topbar-blur {
+    background: rgba(250, 247, 242, .86);
+    backdrop-filter: blur(14px);
+  }
+  .modal-backdrop { @apply fixed inset-0 z-50 flex items-end justify-center bg-ink/35 p-0 backdrop-blur-[2px] sm:items-center sm:p-6; }
+  .modal-panel {
+    @apply max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-line bg-white p-5 shadow-float animate-fade-in sm:max-w-xl sm:rounded-3xl sm:p-6;
+  }
+  .toast-item { @apply flex w-full items-start gap-3 rounded-2xl border bg-white p-3.5 shadow-float animate-slide-in; }
+  .empty-illustration {
+    @apply flex h-14 w-14 items-center justify-center rounded-2xl bg-peach text-primary;
+  }
+  .chart-tooltip {
+    @apply rounded-xl border border-line bg-white px-3 py-2 text-xs shadow-float;
+  }
+  .hide-scrollbar { scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .stat-spark { @apply h-10 w-full; }
+  .kbd { @apply rounded-md border border-line bg-[#fbf8f3] px-1.5 py-0.5 text-[10px] font-semibold text-muted; }
+}
+
+.recharts-wrapper:focus { outline: none; }
+.recharts-cartesian-axis-tick-value { font-size: 11px; fill: #8c867e; }
+.recharts-legend-item-text { font-size: 12px !important; color: #6f6b65 !important; }
+.recharts-tooltip-wrapper { outline: none; }
+.recharts-default-tooltip { border: 1px solid #EEE9E2 !important; border-radius: 12px !important; box-shadow: 0 14px 40px -28px rgba(37, 37, 37, .3); }

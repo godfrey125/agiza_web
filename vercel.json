@@ -1,8 +1,95 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "services": {
+    "site": {
+      "root": "."
+    },
+    "admin": {
+      "root": "admin-app/",
+      "framework": "vite",
+      "routes": [
+        {
+          "src": "/admin/(.*)",
+          "transforms": [
+            {
+              "type": "request.path",
+              "op": "set",
+              "args": "/$1"
+            }
+          ]
+        },
+        {
+          "handle": "filesystem"
+        },
+        {
+          "src": "/(.*)",
+          "dest": "/index.html"
+        }
+      ]
+    },
+    "django": {
+      "root": "backend/",
+      "framework": "django",
+      "devCommand": ".venv/bin/python manage.py runserver 0.0.0.0:$PORT"
+    },
+    "restaurant": {
+      "root": "server/",
+      "framework": "express",
+      "entrypoint": "index.mjs",
+      "devCommand": "node index.mjs",
+      "routes": [
+        {
+          "src": "/api/restaurant/(.*)",
+          "transforms": [
+            {
+              "type": "request.path",
+              "op": "set",
+              "args": "/api/$1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "redirects": [
+    {
+      "source": "/admin",
+      "destination": "/admin/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/restaurant/(.*)",
+      "destination": {
+        "service": "restaurant"
+      }
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "django"
+      }
+    },
+    {
+      "source": "/static/(.*)",
+      "destination": {
+        "service": "django"
+      }
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": {
+        "service": "admin"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "site"
+      }
+    }
+  ],
   "headers": [
     {
       "source": "/downloads/agiza.apk",
@@ -16,15 +103,6 @@
           "value": "attachment; filename=\"agiza.apk\""
         }
       ]
-    }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
     }
   ]
 }

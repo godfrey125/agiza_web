@@ -1,41 +1,89 @@
 # Agiza web
 
-Public website and partner onboarding frontend for **Agiza**, a Tanzanian food
-marketplace. The site covers food discovery, dine-in ordering, delivery and
-custom food requests, with English/Kiswahili content and mobile-first vendor and
-rider application flows.
+Public website, partner onboarding frontend, marketplace API and the private
+restaurant/marketplace admin console for **Agiza**, a Tanzanian food marketplace.
+The site covers food discovery, dine-in ordering, delivery and custom food
+requests, with English/Kiswahili content and mobile-first vendor and rider
+application flows.
 
-This repository is the **frontend**. It never invents approvals, reference
-numbers, contact details, visitor statistics or verification results. Visitor
-analytics and the staff dashboard read from the separate Django backend; if that
-backend is not configured, the dashboard shows an explicit unavailable state
-instead of sample numbers.
+The repository is now a **single deployment**: the public site is served at `/`,
+the admin console at `/admin`, the Django marketplace API at `/api`, and the
+restaurant workspace API at `/api/restaurant`. All persistent data lives in
+Supabase Postgres.
+
+This project never invents approvals, reference numbers, contact details, visitor
+statistics or verification results. Visitor analytics and the staff dashboard
+read from the Django backend; if that backend is not configured, the dashboard
+shows an explicit unavailable state instead of sample numbers.
 
 ## Stack
 
-- React 19 + TypeScript + Vite
+- React 19 + TypeScript + Vite (public site and admin SPA)
 - Tailwind CSS with Agiza brand tokens
 - React Router
 - React Hook Form + Zod
 - Framer Motion and Lucide React
-- Local fonts and locally stored food photography
-- Existing Django phone OTP + SimpleJWT authentication
+- Django REST Framework + SimpleJWT (marketplace API)
+- Express + `pg` (restaurant workspace API)
+- Supabase Postgres (single source of truth)
+- Supabase Auth with Google sign-in (admin console)
+- Vercel Services (one project, one domain)
+
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| `src/` | Public website |
+| `admin-app/` | Admin SPA, served at `/admin` |
+| `backend/` | Django marketplace API, served at `/api` |
+| `server/` | Restaurant workspace API, served at `/api/restaurant` |
+| `supabase/migrations/` | Restaurant schema and upload storage |
+| `vercel.json` | Vercel Services routing for the whole deployment |
 
 ## Quick start
 
+Install the JavaScript dependencies once at the repository root, then install the
+admin app and restaurant API dependencies:
+
 ```bash
 npm install
-cp .env.example .env
-npm run dev
+npm --prefix admin-app install
+npm --prefix server install
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -r backend/requirements.txt
 ```
 
-The development server runs on **http://localhost:8080** because the existing
-Django CORS configuration allows that origin.
+Start each service in its own terminal:
 
 ```bash
-npm run build      # TypeScript check + production build
-npm run preview    # preview the production build
-npm run lint       # oxlint
+# Public site: http://localhost:8080
+npm run dev
+
+# Admin SPA: http://127.0.0.1:5173/admin/
+npm --prefix admin-app run dev
+
+# Restaurant API: http://127.0.0.1:8787/api
+npm --prefix server run dev
+
+# Django marketplace API: http://127.0.0.1:8000/api
+cd backend && .venv/bin/python manage.py runserver 127.0.0.1:8000
+```
+
+The admin app's Vite proxy forwards `/api/restaurant` to the restaurant API and
+`/api` to Django, so the browser contract matches production.
+
+`npx vercel dev --local` starts all four services and is useful for checking the
+API and public-site routing. The admin service currently redirects `/admin/` in
+a loop under `vercel dev` because the Vite dev server already uses `/admin/` as
+its base while the service route strips that prefix for production. Use the
+individual dev servers above for admin UI work; the production build is
+unaffected (the transformed static handler was verified with the built
+`admin-app/dist`).
+
+```bash
+npm run build                    # public site build
+npm --prefix admin-app run build # admin SPA build
+npm run lint                     # oxlint
 ```
 
 ## Routes
@@ -53,26 +101,69 @@ npm run lint       # oxlint
 | `/register/vendor` | Protected five-step vendor application |
 | `/register/rider` | Protected five-step rider application |
 | `/application-status` | Protected, server-confirmed application tracking |
-| `/admin` | Protected staff overview with real visitor analytics and governance summary |
-| `/admin/users` | Account directory, enforcement actions, history and appeals |
-| `/admin/trust` | Trust and safety metrics, risk distribution and appeal decisions |
-| `/admin/audit` | Immutable staff audit trail with before/after values |
-| `/admin/staff` | Staff role assignment for super administrators |
-| `/admin/applications` | Protected staff review queue |
 | `/contact`, `/faq` | Support information and contact form |
 | `/privacy`, `/terms` | Legal drafts marked for legal review |
+| `/admin` | Private admin console (Google sign-in only, not linked from the public site) |
 
 ## Environment
 
-See `.env.example` and `docs/PARTNER_API.md`.
+See `.env.example`, `admin-app/.env.example`, `server/.env.example` and
+`backend/.env.example`.
+
+### Public site
 
 | Variable | Behaviour when blank |
 | --- | --- |
-| `VITE_API_BASE_URL` | Falls back to `http://localhost:8000/api` |
-| `VITE_ANALYTICS_URL` | Restaurant analytics workspace for approved vendors; falls back to `http://localhost:5173` |
+| `VITE_API_BASE_URL` | Uses the same-origin `/api` in production and `http://localhost:8000/api` in development |
 | `VITE_PARTNER_API_BASE_URL` | Registration submission, tracking and staff review stay disabled |
 | `VITE_CONTACT_ENDPOINT` | Contact form is disabled |
 | `VITE_SITE_URL` | No canonical domain is assumed |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Google/email sign-in stays hidden; phone OTP still works |
+
+### Admin app
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_AGIZA_API_URL` | Django marketplace API base. Defaults to `/api` |
+| `VITE_ADMIN_API_URL` | Restaurant workspace API base. Defaults to `/api/restaurant` |
+| `VITE_AGIZA_ADMIN_EMAIL` | The single Google account allowed into `/admin` |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Supabase project used for Google sign-in |
+
+### Django marketplace API
+
+Set these in the `django` Vercel service:
+
+- `SECRET_KEY` — long random value; signs SimpleJWT access tokens
+- `DEBUG=false`
+- `ALLOWED_HOSTS` — include `.vercel.app` and the production domain
+- `DATABASE_URL` — Supabase Postgres connection string. Use the transaction
+  pooler (port `6543`) on Vercel so serverless instances share the project
+  connection budget.
+- `DATABASE_CONN_MAX_AGE=0` — close Django connections after each request
+  (the default). The session pooler is capped at 15 clients.
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY` — identity verification
+- `PLATFORM_ADMIN_EMAIL=shorahgodfrey12@gmail.com`
+- `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` — production origins
+- Optional: `FIREBASE_*`, `REDIS_URL`, `OTP_SMS_WEBHOOK_*`
+
+### Restaurant workspace API
+
+Set these in the `restaurant` Vercel service:
+
+- `DATABASE_URL` — the same Supabase Postgres connection string, using the
+  **session pooler** (port `5432`). The restaurant schema relies on
+  `search_path`, which transaction pooling does not preserve reliably.
+- `RESTAURANT_DATABASE_URL` — optional override for this service. Set it to the
+  session pooler URL when `DATABASE_URL` is the Django transaction-pooler URL.
+- `PG_POOL_MAX=2` — keep the restaurant pool small so it does not consume the
+  project-wide session client limit.
+- `DJANGO_JWT_SECRET` — **must equal the Django `SECRET_KEY`**
+- `PLATFORM_ADMIN_EMAIL=shorahgodfrey12@gmail.com`
+- `AUTH_SECRET` — long random value for legacy restaurant sessions
+- `AGIZA_API_PREFIX=/api` (the default; the Vercel route transform maps
+  `/api/restaurant/*` to `/api/*`)
+
+All `VITE_*` values are public in the browser bundle. Do not put secrets there.
 
 App availability is also environment-driven. The supplied Android APK is served
 from `public/downloads/agiza.apk` by default. Store links and release details stay
@@ -96,27 +187,103 @@ for badge sources and usage rules.
 
 All `VITE_*` values are public in the browser bundle. Do not put secrets there.
 
-## Agiza Analytics
+## Agiza Admin (platform control center)
 
-Approved vendors can open the **Agiza Analytics** restaurant workspace from the
-navigation bar, the footer and the vendors page. The link is configured with
-`VITE_ANALYTICS_URL` and opens in a new tab, so the marketing site and the
-dashboard stay independently deployable. The Android app links to the same
-workspace from the vendor profile.
+The **Agiza Admin** console is served from `/admin` on the same domain as the
+public site. It combines the restaurant workspace (dashboard, menu, orders,
+inventory, reports, marketing, reviews, settings) with the marketplace admin
+sections (partner applications, account governance, trust and safety, audit
+history, staff roles and website visitor analytics).
+
+It is not linked from the public website; open `/admin` directly. Access is
+restricted to one Google account, `shorahgodfrey12@gmail.com`, both in the
+Supabase Google flow and on the Django backend (`PLATFORM_ADMIN_EMAIL`).
 
 ## Authentication
 
-The frontend uses the existing Django endpoints:
+Agiza uses two complementary sign-in paths. Both end with the same Django JWT
+pair, so every API endpoint and role rule stays unchanged.
+
+**Phone OTP (Django)** — used by customers, vendors and riders:
 
 - `POST /users/auth/request-otp/`
 - `POST /users/auth/verify-otp/`
 - `POST /users/auth/token/refresh/`
 - `GET /users/me/`
 
-A verified phone number is required before a vendor or rider can open an
+**Google / email (Supabase identity)** — optional, enabled only when the
+Supabase project is configured:
+
+1. The browser signs in with `supabase.auth.signInWithOAuth({ provider: 'google' })`
+   and returns to `/auth/callback`.
+2. `POST /users/auth/supabase/` verifies the Supabase access token against the
+   project's public JWKS, creates or links the Agiza account, and returns the
+   normal Agiza JWT pair.
+
+A verified phone number is still required before a vendor or rider can open an
 application. The application form does not create a separate password. JWT
 tokens are stored in local storage by the existing client and sent as
 `Authorization: Bearer <access>` to partner API endpoints.
+
+**Admin console (Google only)** — `/admin` uses Supabase Google sign-in:
+
+1. The admin SPA signs in with Supabase and returns to
+   `/admin/marketplace/auth/callback`.
+2. It exchanges the Supabase access token at `POST /api/users/auth/supabase/`.
+   The Django backend verifies the token, auto-provisions the platform admin on
+   the first successful exchange, and returns the normal Agiza JWT pair.
+3. The same Django JWT is sent to both `/api` and `/api/restaurant`, so the
+   marketplace and restaurant workspace share one session. The restaurant API
+   verifies the Django JWT with `DJANGO_JWT_SECRET`.
+
+The admin console is restricted to `PLATFORM_ADMIN_EMAIL` on the Django backend
+and to `VITE_AGIZA_ADMIN_EMAIL` in the browser. The public site no longer exposes
+any `/admin` link.
+
+### Supabase project setup
+
+Set these in `.env.local` (or the deployment's runtime config):
+
+- `VITE_SUPABASE_URL` — the project URL, e.g.
+  `https://prhnakmkhbxxobzidijj.supabase.co`
+- `VITE_SUPABASE_ANON_KEY` — the publishable/anon key (safe in the browser)
+
+In the Supabase dashboard:
+
+1. **Authentication → Providers → Google**: enable it with a Google Cloud OAuth
+   client ID and secret. Authorized redirect URI:
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+2. **Authentication → URL Configuration**: set the Site URL to the deployed
+   origin and add every redirect used by the website, admin console and app:
+   - `http://localhost:8080/auth/callback` (public site in development)
+   - `http://127.0.0.1:5173/admin/marketplace/auth/callback` (admin in development)
+   - `http://localhost:5173/admin/marketplace/auth/callback` (admin in development)
+   - `https://<production-domain>/auth/callback` (public site)
+   - `https://<production-domain>/admin/marketplace/auth/callback` (admin console)
+   - `agiza://login-callback` (Android app)
+
+The Google button stays hidden while the Supabase URL/key are blank, so a
+half-configured deploy never shows a sign-in option that cannot work.
+
+**Troubleshooting “The Google session could not be read”** — the admin callback
+now shows the real Supabase/provider error. The usual causes are:
+
+- The callback URL is missing from **Authentication → URL Configuration →
+  Redirect URLs**. Add the exact origin shown in the error message.
+- The sign-in started on a different host than the callback (`localhost` vs
+  `127.0.0.1`). PKCE code verifiers are origin-scoped, so use one host
+  consistently. The callback detects this and asks you to reopen the console.
+- The Google Cloud OAuth client's authorized redirect URI is not
+  `https://<project-ref>.supabase.co/auth/v1/callback`.
+- The Google consent screen is in **Testing** mode and the admin email is not
+  listed as a test user.
+
+**Troubleshooting `EMAXCONNSESSION` / “max clients reached in session mode”** —
+the Supabase session pooler (port `5432`) allows only 15 concurrent clients.
+Django defaults to `DATABASE_CONN_MAX_AGE=0`, and the restaurant pool defaults
+to `PG_POOL_MAX=2`. If the error persists, stop stray local API processes,
+restart the services, and use the transaction pooler (port `6543`) for Django
+with `RESTAURANT_DATABASE_URL` on the session pooler for the restaurant API.
 
 Development OTPs are displayed only when the Django endpoint returns `dev_otp`.
 The development warning itself is hidden in production builds.
@@ -129,11 +296,11 @@ one backend instance.
 
 ## Visitor analytics and staff dashboard
 
-The protected `/admin` page shows real page views, unique visitors, sessions,
-top pages, referral sources, devices, browsers, recent visits and marketplace
-counts from the Django backend. It has no hardcoded or sample numbers. If the API
-is unreachable or the signed-in user is not staff, the page says so and shows no
-fake data.
+The **Agiza Admin** app shows real page views, unique visitors,
+sessions, top pages, referral sources, devices, browsers, recent visits and
+marketplace counts from the Django backend. It has no hardcoded or sample
+numbers. If the API is unreachable or the signed-in user is not an admin, the
+page says so and shows no fake data.
 
 The public tracker in `src/lib/analytics.ts` calls:
 
@@ -154,23 +321,23 @@ Privacy behaviour:
 - Bot and staff page views are recorded separately and excluded from public
   visitor totals.
 
-To create a staff account locally, register normally with a phone number, then
-promote that user in the Django shell:
+To create the platform admin locally, run the Django shell after migrations:
 
 ```bash
-cd /path/to/agiza-master/backend
-.venv/bin/python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); u=U.objects.get(phone='+2557XXXXXXXX'); u.role=U.Role.ADMIN; u.is_staff=True; u.staff_role='SUPER_ADMIN'; u.save()"
+cd backend
+.venv/bin/python manage.py shell -c "from users.models import User; U=User; u,_=U.objects.get_or_create(username='shorahgodfrey12@gmail.com', defaults={'email':'shorahgodfrey12@gmail.com'}); u.role=U.Role.ADMIN; u.staff_role=U.StaffRole.SUPER_ADMIN; u.is_staff=True; u.is_active=True; u.set_unusable_password(); u.save()"
 ```
 
-Sign in through the website with that phone number and OTP; the `/admin` link
-appears for staff users. Production needs a shared OTP cache such as Redis and a
-strong `SECRET_KEY`, and the frontend needs `VITE_API_BASE_URL` pointing to the
-deployed HTTPS API.
+Then sign in to `/admin` with the Google account
+`shorahgodfrey12@gmail.com`. Production needs a shared OTP cache such as Redis
+for phone OTP and a strong `SECRET_KEY`; the website uses the same-origin `/api`
+on the single Vercel deployment.
 
 ## Account governance and control center
 
 The Django backend's `administration` app provides server-enforced account
-governance. The website surfaces it through the protected `/admin` routes:
+governance. The Agiza Admin app surfaces it through its
+Marketplace section:
 
 - account warnings, suspensions, restrictions, sign-in locks, session revocation,
   restoration and permanent termination;
@@ -221,87 +388,117 @@ approvals.
 
 ## Known limitations
 
-- The existing Django project has no partner application, document storage,
-  verification or admin review endpoints. Those endpoints must be implemented
-  and deployed before launch.
-- Visitor analytics and the `/admin` dashboard require the Django backend to be
-  deployed and reachable at `VITE_API_BASE_URL`. No production backend is live
-  yet, so a production build will show the dashboard as unavailable until it is.
+- Partner document storage and the full review workflow still depend on the
+  trusted partner API contract. The registration forms remain usable for
+  drafting and validation, but submission stays disabled until that service is
+  configured.
 - No verified Agiza phone number, email address, physical address or social
   account was supplied. `src/lib/config.ts` deliberately leaves them blank.
 - Privacy and Terms are drafts and are marked as requiring legal review.
 - The site does not implement payments, live order tracking or delivery
   dispatch. Those remain outside this frontend scope.
+- The Django admin at `/admin/` is intentionally shadowed by the Agiza admin
+  console on the public deployment. Use the Agiza console for operations.
 
 ## Deployment
 
-1. Set the production `VITE_*` values at build time.
-2. Run `npm run build`.
-3. Serve `dist/` over HTTPS.
-4. Configure SPA fallback so unknown paths return `index.html`.
-5. Add the deployed origin to the Django and partner API CORS allow-list.
-6. Run migrations and create at least one staff account in the Django backend for
-   `/admin`.
-7. Verify the partner API over HTTPS before enabling submission.
-8. Serve `/downloads/agiza.apk` as `application/vnd.android.package-archive` with
-   `Content-Disposition: attachment; filename="agiza.apk"` so Android browsers
-   download the supplied APK correctly.
+The whole product deploys as one Vercel project using **Vercel Services**. The
+root `vercel.json` defines four services and routes them on one domain:
 
-### Firebase Hosting
+| Service | Root | Public path | Runtime |
+| --- | --- | --- | --- |
+| `site` | `.` | `/` | Vite |
+| `admin` | `admin-app/` | `/admin` | Vite |
+| `django` | `backend/` | `/api`, `/static` | Django |
+| `restaurant` | `server/` | `/api/restaurant` | Express |
 
-The site is deployed to Firebase Hosting project `agiza-3884d`:
+Routing order is specific-first: `/api/restaurant/*` → `restaurant`,
+`/api/*` → `django`, `/static/*` → `django`, `/admin/*` → `admin`, and
+everything else → `site`. `/admin` redirects to `/admin/`.
 
-- https://agiza-3884d.web.app
-- https://agiza-3884d.firebaseapp.com
+### 1. Prepare Supabase
 
-Deploy with:
+The restaurant schema is in `supabase/migrations/`:
+
+- `20261111000000_restaurant_schema.sql` creates the `restaurant` schema,
+  tables, indexes and SQLite-compatibility helpers.
+- `20261112000000_restaurant_uploads.sql` creates `restaurant.uploads` for
+  Postgres-backed menu images.
+
+Apply them with the Supabase SQL editor or `psql` against the project's
+`DATABASE_URL`. The existing public CMS tables (`pages`, `posts`, `profiles`,
+`plans`, `site_settings`, …) are untouched.
+
+### 2. Configure environment variables
+
+Set the variables from the four `.env.example` files in the Vercel project.
+The most important shared values are:
+
+- `DATABASE_URL` — Supabase Postgres connection string. Use the transaction
+  pooler (port `6543`) for `django`.
+- `RESTAURANT_DATABASE_URL` — the session pooler (port `5432`) for the
+  `restaurant` service. This keeps `search_path` working and prevents the two
+  services from competing for the same session client limit.
+- `SECRET_KEY` — Django signing key.
+- `DJANGO_JWT_SECRET` — same value as `SECRET_KEY` (restaurant service).
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` — site and admin services.
+- `PLATFORM_ADMIN_EMAIL=shorahgodfrey12@gmail.com`.
+
+Vercel injects the same project environment variables into every service, so
+the shared `SECRET_KEY` can be set once. `DATABASE_URL` and
+`RESTAURANT_DATABASE_URL` intentionally point at different pooler modes; the
+restaurant service reads `RESTAURANT_DATABASE_URL` first and falls back to
+`DATABASE_URL`.
+
+### 3. Deploy
+
+Import the repository in Vercel, or run:
 
 ```bash
-AGIZA_API_BASE_URL=https://api.example.com/api \
-AGIZA_APK_URL=https://github.com/godfrey125/agiza_web/releases/download/agiza-apk-v1/agiza.apk \
-./deploy-firebase.sh
+vercel --prod
 ```
 
-The script builds, writes `dist/runtime-config.js`, and runs
-`firebase deploy --only hosting`. `runtime-config.js` overrides the `VITE_*`
-build-time defaults, so the API URL and APK URL can change without a rebuild —
-edit `dist/runtime-config.js` and redeploy, or pass the variables above.
+Vercel builds each service separately. The public site output is `dist/`, the
+admin output is `admin-app/dist/`, Django runs from `backend/manage.py`, and
+the restaurant API runs from `server/index.mjs`.
 
-Firebase Hosting's Spark plan rejects executable files, so `firebase.json`
-ignores `**/*.apk`. The Android APK is published as a GitHub Release asset and
-linked through `AGIZA_APK_URL`; `/downloads/agiza.apk` remains available from
-the local Vite dev server only.
+### 4. Finish Supabase auth configuration
 
-Add every deployed origin (for example `https://agiza-3884d.web.app`) to the
-Django `CORS_ALLOWED_ORIGINS` list. Firestore is provisioned on the project.
-Firebase Authentication requires the Blaze plan (Identity Platform), so the
-current deployment keeps Django JWT authentication.
+Add the production redirect URLs in **Authentication → URL Configuration**:
 
-### Vercel
+- `https://<production-domain>/auth/callback`
+- `https://<production-domain>/admin/marketplace/auth/callback`
 
-`vercel.json` configures the Vite build, SPA fallback, and the APK response
-headers. Import `godfrey125/agiza_web` in Vercel, or deploy with the Vercel CLI.
-Set the production `VITE_*` values in the Vercel project before deploying,
-especially:
+Add the production origin to the Django `CORS_ALLOWED_ORIGINS` and
+`CSRF_TRUSTED_ORIGINS` values, and set `ALLOWED_HOSTS` to include the Vercel
+domain (`.vercel.app`) and any custom domain.
 
-- `VITE_API_BASE_URL` — the public HTTPS URL of the Django API, not
-  `localhost`.
-- `VITE_SITE_URL` — the final Vercel or custom domain.
-- `VITE_PARTNER_API_BASE_URL` and `VITE_CONTACT_ENDPOINT` — only when those
-  services are live.
+### 5. First admin sign-in
 
-Vite bakes `VITE_*` values into the built assets, so changing an environment
-variable in Vercel requires a redeploy. The APK is 23 MB, which is within
-Vercel's 100 MB static-file limit for Hobby projects. If you later move the APK
-to external storage, set `VITE_APP_APK_URL` to its public HTTPS URL.
+The first successful Google exchange for `shorahgodfrey12@gmail.com`
+auto-provisions the Django admin user (`role=ADMIN`, `staff_role=SUPER_ADMIN`).
+The restaurant admin row already exists in `restaurant.users`. No separate
+password is created.
+
+### Legacy Firebase Hosting
+
+The previous Firebase Hosting deployment (`agiza-3884d.web.app`) is no longer
+the target. The `deploy-firebase.sh` script and `firebase.json` are kept for
+reference, but the production deployment is Vercel.
 
 ## Verification checklist
 
-- `npm run build` succeeds with no TypeScript errors.
+- `npm run build` and `npm --prefix admin-app run build` succeed with no
+  TypeScript errors.
 - EN/SW switching updates navigation, pages, forms, validation and statuses.
 - Phone OTP login works against the configured Django API.
-- `/admin` shows live backend counts for staff users and an explicit unavailable
-  state when the analytics API is not configured.
+- `/admin` opens the Google-only admin console, and only
+  `shorahgodfrey12@gmail.com` is accepted.
+- The admin JWT opens both the marketplace pages and the restaurant workspace
+  pages (dashboard, menu, orders, inventory, reports, marketing, reviews,
+  settings).
+- Menu image uploads are stored in Postgres and served from
+  `/api/restaurant/uploads/:id`.
 - Account actions, staff role changes and appeal decisions require the matching
   backend permission and leave audit records.
 - Blocked users can submit an appeal from the sign-in page without exposing

@@ -49,7 +49,7 @@ function sessionId() {
 }
 
 /**
- * Records anonymous public page views for the staff analytics dashboard.
+ * Records anonymous public page views for the admin dashboard.
  * It never stores an IP address and respects Do Not Track.
  */
 export function AnalyticsTracker() {
@@ -57,7 +57,7 @@ export function AnalyticsTracker() {
   const lastTracked = useRef<string | null>(null)
 
   useEffect(() => {
-    if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/downloads')) {
+    if (location.pathname.startsWith('/downloads')) {
       return
     }
     const dnt =

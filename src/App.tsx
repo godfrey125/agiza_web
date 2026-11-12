@@ -2,7 +2,6 @@ import { lazy } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { SiteLayout, ScrollToTop } from './components/layout/SiteLayout'
-import { AdminLayout } from './components/admin/AdminLayout'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { Home } from './pages/Home'
 
@@ -17,6 +16,9 @@ const GetStarted = lazy(() =>
   import('./pages/GetStarted').then((module) => ({ default: module.GetStarted })),
 )
 const Login = lazy(() => import('./pages/Login').then((module) => ({ default: module.Login })))
+const AuthCallback = lazy(() =>
+  import('./pages/AuthCallback').then((module) => ({ default: module.AuthCallback })),
+)
 const VendorRegister = lazy(() =>
   import('./pages/VendorRegister').then((module) => ({ default: module.VendorRegister })),
 )
@@ -25,24 +27,6 @@ const RiderRegister = lazy(() =>
 )
 const ApplicationStatus = lazy(() =>
   import('./pages/ApplicationStatus').then((module) => ({ default: module.ApplicationStatus })),
-)
-const AdminDashboard = lazy(() =>
-  import('./pages/AdminDashboard').then((module) => ({ default: module.AdminDashboard })),
-)
-const AdminApplications = lazy(() =>
-  import('./pages/AdminApplications').then((module) => ({ default: module.AdminApplications })),
-)
-const AdminUsers = lazy(() =>
-  import('./pages/AdminUsers').then((module) => ({ default: module.AdminUsers })),
-)
-const AdminTrust = lazy(() =>
-  import('./pages/AdminTrust').then((module) => ({ default: module.AdminTrust })),
-)
-const AdminAudit = lazy(() =>
-  import('./pages/AdminAudit').then((module) => ({ default: module.AdminAudit })),
-)
-const AdminStaff = lazy(() =>
-  import('./pages/AdminStaff').then((module) => ({ default: module.AdminStaff })),
 )
 const Contact = lazy(() => import('./pages/Contact').then((module) => ({ default: module.Contact })))
 const FAQ = lazy(() => import('./pages/FAQ').then((module) => ({ default: module.FAQ })))
@@ -56,21 +40,6 @@ export default function App() {
       <MotionConfig reducedMotion="user">
         <ScrollToTop />
         <Routes>
-          <Route
-            path="admin"
-            element={
-              <ProtectedRoute staffOnly>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="trust" element={<AdminTrust />} />
-            <Route path="applications" element={<AdminApplications />} />
-            <Route path="audit" element={<AdminAudit />} />
-            <Route path="staff" element={<AdminStaff />} />
-          </Route>
           <Route element={<SiteLayout />}>
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
@@ -80,6 +49,7 @@ export default function App() {
             <Route path="riders" element={<Riders />} />
             <Route path="get-started" element={<GetStarted />} />
             <Route path="login" element={<Login />} />
+            <Route path="auth/callback" element={<AuthCallback />} />
             <Route
               path="register/vendor"
               element={
