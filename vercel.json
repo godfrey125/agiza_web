@@ -10,13 +10,8 @@
       "routes": [
         {
           "src": "/admin/(.*)",
-          "transforms": [
-            {
-              "type": "request.path",
-              "op": "set",
-              "args": "/$1"
-            }
-          ]
+          "dest": "/$1",
+          "continue": true
         },
         {
           "handle": "filesystem"
